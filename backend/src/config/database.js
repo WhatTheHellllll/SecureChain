@@ -3,7 +3,9 @@ import 'dotenv/config';
 
 const connectDB = async (uri) => {
     try {
-        const connectionInstance = await mongoose.connect(uri);
+        const connectionInstance = await mongoose.connect(uri, {
+            dbName: "securechain_db" // <--- Force the database name here
+        });
         console.log(`\nDatabase connected successfully
             ${connectionInstance.connection.host}`);
         return connectionInstance;

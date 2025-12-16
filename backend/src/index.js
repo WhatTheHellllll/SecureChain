@@ -1,18 +1,7 @@
 import express from "express";
-import cors from 'cors';
+import app from './app.js';
 import connectDB from './config/database.js';
 import 'dotenv/config';
-
-const app = express();
-app.use(express.json());
-
-
-// Middlewares
-app.use(cors());
-app.use(express.json());
-
-// Sample Route
-
 
 // Server logic
 let server;
@@ -72,4 +61,3 @@ const startServer = async () => {
 
 startServer();
 
-export default app;
