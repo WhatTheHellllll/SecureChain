@@ -1,0 +1,38 @@
+import mongoose from 'mongoose';
+
+const productSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  sku: { // Stock Keeping Unit (Unique ID for barcode)
+    type: String,
+    required: true,
+    unique: true,
+    uppercase: true
+  },
+  quantity: {
+    type: Number,
+    required: true,
+    default: 0
+  },
+  price: {
+    type: Number,
+    required: true,
+    default: 0.0
+  },
+  category: {
+    type: String,
+    required: true
+  },
+  lastUpdatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', // We will link this to a User later
+    required: false // Optional for now until we build Auth
+  }
+}, {
+  timestamps: true // Automatically adds createdAt and updatedAt
+});
+
+export const Product = mongoose.model('Product', productSchema);
