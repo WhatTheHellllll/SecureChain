@@ -2,23 +2,13 @@
 import { ref, onMounted, computed } from 'vue';
 import api from '../services/api';
 import { RouterLink } from 'vue-router';
+import { confirmDelete, showSuccess } from '../utils/alert';
 
 const products = ref([]);
 const loading = ref(true);
 const error = ref(null);
 const searchQuery = ref(''); 
 
-const handleDelete = async (id) => {
-  if (confirm('Are you sure you want to delete this product?')) {
-    try {
-      await api.deleteProduct(id);
-      // Refresh the list locally without reloading page
-      products.value = products.value.filter(p => p._id !== id);
-    } catch (err) {
-      alert('Failed to delete product');
-    }
-  }
-};
 
 // Fetch Data
 const fetchProducts = async () => {
@@ -29,6 +19,16 @@ const fetchProducts = async () => {
   } catch (err) {
     error.value = 'Failed to load inventory.';
     loading.value = false;
+  }
+};
+
+const handleDelete = async (id) => {
+  if (await confirmDelete()) 
+  { 
+    await api.deleteProduct(id);
+    products.value = products.value.filter(p => p._id !== id);
+    
+    showSuccess('Product deleted successfully!');
   }
 };
 
@@ -88,7 +88,7 @@ onMounted(() => {
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
 
@@ -113,7 +113,7 @@ onMounted(() => {
                   {{ product.quantity }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+              <td class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium space-x-3">
                 <RouterLink 
                     :to="`/products/edit/${product._id}`" 
                     class="text-indigo-600 hover:text-indigo-900 font-bold"

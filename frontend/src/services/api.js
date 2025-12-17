@@ -10,21 +10,20 @@ const api = axios.create({
 });
 
 export default {
-  // This calls GET /api/v1/products/list
   getProducts() {
-    return api.get('/products');
+    return api.get('/products/list');
   },
   getProduct(id) {
-    return api.get(`/products/${id}`);
+    return api.get(`/products/get/${id}`);
   },
   createProduct(data) {
-    return api.post('/products', data);
+    return api.post('/products/create', data);
   },
   updateProduct(id, data) {
-    return api.put(`/products/${id}`, data);
+    return api.put(`/products/update/${id}`, data);
   },
   deleteProduct(id) {
-    return api.delete(`/products/${id}`);
+    return api.delete(`/products/delete/${id}`);
   }
   
 };
