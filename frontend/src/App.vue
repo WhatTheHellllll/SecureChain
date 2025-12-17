@@ -1,11 +1,22 @@
-<script setup></script>
+<script setup>
+import Header from "./components/layout/header.vue";
+import Footer from "./components/layout/footer.vue";
+import ProductView from "./views/product.view.vue";
+// Later, you will import UserView here too
+import { ref } from "vue";
+
+// Simple state to simulate switching pages (Until we add Router)
+const currentPage = ref("products");
+</script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
-</template>
+  <div class="min-h-screen flex flex-col font-sans text-gray-900">
+    <Header />
 
-<style scoped></style>
+    <main class="flex-grow container mx-auto py-8">
+      <RouterView />
+    </main>
+
+    <Footer />
+  </div>
+</template>

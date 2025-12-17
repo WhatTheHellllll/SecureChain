@@ -4,7 +4,9 @@ const productSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    maximum: 40,
+    minimum: 3
   },
   sku: { // Stock Keeping Unit (Unique ID for barcode)
     type: String,
