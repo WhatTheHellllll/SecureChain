@@ -2,12 +2,11 @@ import { createRouter, createWebHistory } from 'vue-router';
 import ProductView from '../views/product.view.vue';
 import ProductCreateView from '../views/product.create.view.vue';
 import ProductEditView from '../views/product.edit.view.vue';
-
 // 1. Define your routes
 const routes = [
   {
     path: '/',
-    redirect: '/products'
+    redirect: '/login'
   },
   {
     path: '/products',
@@ -25,9 +24,16 @@ const routes = [
     component: ProductEditView
   },
   {
-    path: '/users',
-    name: 'users',
-    component: () => import('../views/user.view.vue') // Lazy load example
+    path: '/login',
+    name: 'login',
+    component: () => import('../views/login.view.vue'),
+    meta: { hideLayout: true }
+  },
+  {
+    path: '/register',
+    name: 'register',
+    component: () => import('../views/register.view.vue'),
+    meta: { hideLayout: true }
   }
   // ,
   // {

@@ -8,12 +8,12 @@ const route = useRoute();
 
 <template>
   <div class="min-h-screen flex flex-col font-sans text-gray-900">
-    <Header v-if="!['/login', '/register'].includes(route.path)" />
+    <Header v-if="!route.meta.hideLayout" />
 
-    <main class="flex-grow container mx-auto py-8">
+    <main class="flex-grow container mx-auto">
       <RouterView />
     </main>
 
-    <Footer v-if="!['/login', '/register'].includes(route.path)" />
+    <Footer v-if="!route.meta.hideLayout" />
   </div>
 </template>

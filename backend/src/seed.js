@@ -27,6 +27,18 @@ const seedDatabase = async () => {
       console.log("ℹ️ Admin Role already exists");
     }
 
+    let userRole = await Role.findOne({ name: "user" });
+
+    if (!userRole) {
+      userRole = await Role.create({
+        name: "user",
+        description: "Regular user with limited permissions.",
+        permissions: ["read_products", "create_orders"] // Example permissions
+      });
+      console.log("👤 User Role Created");
+    } else {
+      console.log("ℹ️ User Role already exists");
+    }
     // Create the "Super Admin" User
     const adminEmail = "admin@securechain.com";
     const adminExists = await User.findOne({ email: adminEmail });

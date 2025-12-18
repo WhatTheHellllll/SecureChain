@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import api from '../services/api';
+import productApi from '../services/product.service.js';
 import { showError, showSuccess } from '../utils/alert';
 
 const router = useRouter();
@@ -13,7 +13,7 @@ const loading = ref(false);
 const handleSubmit = async () => {
   loading.value = true;
   try {
-    await api.createProduct(form.value);
+    await productApi.createProduct(form.value);
     
     await showSuccess('Product has been created successfully.');
     

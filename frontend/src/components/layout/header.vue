@@ -21,22 +21,15 @@ const handleLogout = () => {
       </RouterLink>
 
       <div class="flex items-center space-x-6">
-        <RouterLink to="/products" class="hover:text-blue-400 transition">
-          Products
-        </RouterLink>
-
-        <RouterLink to="/users" class="hover:text-blue-400 transition">
-          Users
-        </RouterLink>
-
         <div class="h-6 w-px bg-slate-600"></div>
 
         <button
           @click="handleLogout"
-          class="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition shadow-sm"
+          class="text-heading bg-transparent box-border border border-transparent hover:bg-neutral-secondary-medium focus:ring-4 focus:ring-neutral-tertiary font-medium leading-5 rounded-base text-sm px-4 py-2.5 focus:outline-none""
         >
           Logout
         </button>
+        
       </div>
     </div>
   </nav>

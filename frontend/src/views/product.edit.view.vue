@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router"; // useRoute gets the ID from URL
-import api from "../services/api";
+import productApi from "../services/product.service.js";
 
 const router = useRouter();
 const route = useRoute(); // Access URL params
@@ -15,7 +15,7 @@ const error = ref(null);
 onMounted(async () => {
   try {
     const productId = route.params.id; // Get ID from URL /products/edit/:id
-    const response = await api.getProduct(productId);
+    const response = await productApi.getProduct(productId);
     form.value = response.data; // Fill the form
   } catch (err) {
     error.value = "Failed to load product details.";
@@ -30,7 +30,7 @@ const handleUpdate = async () => {
   saving.value = true;
   try {
     const productId = route.params.id;
-    await api.updateProduct(productId, form.value);
+    await productApi.updateProduct(productId, form.value);
     router.push("/products"); // Redirect to list
   } catch (err) {
     alert("Failed to update product.");
