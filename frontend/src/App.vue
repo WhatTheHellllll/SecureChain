@@ -1,22 +1,19 @@
 <script setup>
 import Header from "./components/layout/header.vue";
 import Footer from "./components/layout/footer.vue";
-import ProductView from "./views/product.view.vue";
-// Later, you will import UserView here too
-import { ref } from "vue";
+import { useRoute } from "vue-router";
 
-// Simple state to simulate switching pages (Until we add Router)
-const currentPage = ref("products");
+const route = useRoute();
 </script>
 
 <template>
   <div class="min-h-screen flex flex-col font-sans text-gray-900">
-    <Header />
+    <Header v-if="!['/login', '/register'].includes(route.path)" />
 
     <main class="flex-grow container mx-auto py-8">
       <RouterView />
     </main>
 
-    <Footer />
+    <Footer v-if="!['/login', '/register'].includes(route.path)" />
   </div>
 </template>

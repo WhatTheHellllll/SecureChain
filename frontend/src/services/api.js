@@ -8,22 +8,12 @@ const api = axios.create({
     'Content-Type': 'application/json'
   }
 });
-
-export default {
-  getProducts() {
-    return api.get('/products/list');
-  },
-  getProduct(id) {
-    return api.get(`/products/get/${id}`);
-  },
-  createProduct(data) {
-    return api.post('/products/create', data);
-  },
-  updateProduct(id, data) {
-    return api.put(`/products/update/${id}`, data);
-  },
-  deleteProduct(id) {
-    return api.delete(`/products/delete/${id}`);
+// adds the Token to every request if it exists
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-  
-};
+  return config;
+});
+export default api;
