@@ -11,8 +11,6 @@ const generateToken = (id) => {
 };
 
 // @desc    Login user & get token
-// @route   POST /api/v1/auth/login
-// @access  Public
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -57,6 +55,7 @@ const login = async (req, res, next) => {
   }
 };
 
+// @desc    Register a new user
 const register = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
@@ -75,30 +74,6 @@ const register = async (req, res, next) => {
     if (!userRole) {
       return next(new ErrorResponse("Error: Default 'user' role not found in DB", 500));
     }
-// const adminEmail = "admin@securechain.com";
-//     const adminExists = await User.findOne({ email: adminEmail });
-
-//     if (!adminExists) {
-//       // Hash password manually since we are bypassing the model .save() hook logic sometimes, 
-//       // but sticking to standard create() is safer.
-//       // However, since we defined the pre-save hook in user.model.js, 
-//       // passing the plain text password here is actually correct! 
-//       // The model will hash it for us.
-      
-//       await User.create({
-//         name: "Sokun Admin",
-//         email: adminEmail,
-//         password: "password123", // The hook in your model will hash this!
-//         role: adminRole._id,     // Link to the Role ID we just found/created
-//         status: "active",
-//         customPermissions: [],
-//         deniedPermissions: []
-//       });
-      
-//       console.log(`👤 Admin User Created: ${adminEmail} / password123`);
-//     } else {
-//       console.log("ℹ️ Admin User already exists");
-//     }
     const user = await User.create({
       name,
       email,

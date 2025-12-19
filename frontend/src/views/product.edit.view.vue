@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router"; // useRoute gets the ID from URL
 import productApi from "../services/product.service.js";
+import { showError, showSuccess } from '../utils/alert';
 
 const router = useRouter();
 const route = useRoute(); // Access URL params
@@ -31,9 +32,14 @@ const handleUpdate = async () => {
   try {
     const productId = route.params.id;
     await productApi.updateProduct(productId, form.value);
+
+    await showSuccess('Product has been updated successfully.');
+
     router.push("/products"); // Redirect to list
   } catch (err) {
-    alert("Failed to update product.");
+    const message = err.response?.data?.message || 'Failed to create product.';
+    
+    showError(message);   
   } finally {
     saving.value = false;
   }

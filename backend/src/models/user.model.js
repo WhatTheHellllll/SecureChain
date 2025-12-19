@@ -32,15 +32,16 @@ const userSchema = mongoose.Schema(
     },
 
     // Things this user CAN do, even if their Role cannot
-    customPermissions: [{
-      type: String 
-    }],
+   customPermissions: {
+      type: [String], 
+      default: []
+    },
 
-    // Things this user CANNOT do, even if their Role usually can
-    deniedPermissions: [{
-      type: String 
-    }],
-
+    // Permissions strictly TAKEN AWAY from them
+    deniedPermissions: {
+      type: [String],
+      default: []
+    },
     status: {
       type: String,
       enum: ["active", "suspended"],

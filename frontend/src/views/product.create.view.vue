@@ -23,7 +23,7 @@ const handleSubmit = async () => {
     console.error(err);
     const message = err.response?.data?.message || 'Failed to create product.';
     
-    showError(message);
+    showError(message);   
     
   } finally {
     loading.value = false;

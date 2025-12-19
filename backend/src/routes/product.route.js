@@ -1,18 +1,19 @@
 import { Router } from "express";
 import { getProducts,getProduct, createProduct, updateProduct, deleteProduct } from "../controllers/product.controller.js";
 import { protect } from "../middleware/auth.middleware.js";
-console.log("Product Routes file is loading..."); // <--- ADD THIS
-// ... rest of code
+import { checkPermission } from "../middleware/permission.middleware.js";
+
+console.log("Product Routes file is loading..."); 
+
 const router = Router();
 
-// This handles: /api/v1/products/list
-router.route("/list").get(getProducts);
+router.route("/list").get(protect, checkPermission("product.read"), getProducts);
 
-// This handles: /api/v1/products/create
-router.route("/create").post(protect,createProduct);
+router.route("/create").post(protect, checkPermission("product.create"), createProduct);
 
-router.route("/get/:id").get(getProduct);          
-router.route("/update/:id").put(protect,updateProduct);    
-router.route("/delete/:id").delete(protect,deleteProduct);
+router.route("/get/:id").get(protect,getProduct);          
 
+router.route("/update/:id").put(protect, checkPermission("product.update"), updateProduct);  
+  
+router.route("/delete/:id").delete(protect, checkPermission("product.delete"), deleteProduct);
 export default router;

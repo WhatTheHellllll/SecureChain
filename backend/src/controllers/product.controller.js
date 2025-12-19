@@ -1,6 +1,7 @@
 import {Product} from '../models/product.model.js';
 import ErrorResponse from "../utils/error.response.js";
 
+// @desc    Get all products
 const getProducts = async (req, res, next) => {
   try {
     const products = await Product.find();
@@ -9,10 +10,11 @@ const getProducts = async (req, res, next) => {
         count: products.length, 
         data: products});
   } catch (error) {
-    next(error); // Passes crash errors to middleware
+    next(error);
   }
 };
 
+// @desc    Get single product
 const getProduct = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -30,6 +32,7 @@ const getProduct = async (req, res, next) => {
   }
 };
 
+// @desc    Create new product
 const createProduct = async (req, res, next) => {
     try {
         const { name, sku, quantity, price, category } = req.body;
@@ -57,6 +60,7 @@ const createProduct = async (req, res, next) => {
     }
 }
 
+// @desc    Update product
 const updateProduct = async (req, res, next) => {
     try {
         const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
@@ -78,6 +82,7 @@ const updateProduct = async (req, res, next) => {
     }
 };
 
+// @desc    Delete product
 const deleteProduct = async (req, res, next) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);

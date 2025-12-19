@@ -1,40 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import ProductView from '../views/product.view.vue';
-import ProductCreateView from '../views/product.create.view.vue';
-import ProductEditView from '../views/product.edit.view.vue';
-// 1. Define your routes
+import authRoutes from './modules/authentication'; 
+import productRoutes from './modules/product'; 
 const routes = [
   {
     path: '/',
     redirect: '/login'
   },
-  {
-    path: '/products',
-    name: 'products',
-    component: ProductView
-  },
-  {
-    path: '/products/create',
-    name: 'product-create',
-    component: ProductCreateView
-  },
-  {
-    path: '/products/edit/:id', 
-    name: 'product-edit',
-    component: ProductEditView
-  },
-  {
-    path: '/login',
-    name: 'login',
-    component: () => import('../views/login.view.vue'),
-    meta: { hideLayout: true }
-  },
-  {
-    path: '/register',
-    name: 'register',
-    component: () => import('../views/register.view.vue'),
-    meta: { hideLayout: true }
-  }
+  ...authRoutes,   
+  ...productRoutes,
+    
+
+  //#region 
   // ,
   // {
   //   path: '/admin',
@@ -54,12 +30,29 @@ const routes = [
   //     }
   //   ]
   // }
+  //#endregion
 ];
 
-// 2. Create the router instance
+// Create the router instance
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
+});
+
+// THE SECURITY GUARD
+router.beforeEach((to, from, next) => {
+  //  Check if the page requires authentication and has a token in LocalStorage (use some incase of nested routes)
+  const token = localStorage.getItem('token');
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  if (requiresAuth && !token) {
+      next('/login');
+  }
+  else if ((to.name === 'login' || to.name === 'register') && token) {
+    next('/products'); // Redirect them to dashboard
+  }
+  else {
+    next();
+  }
 });
 
 export default router;
