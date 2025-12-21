@@ -1,5 +1,15 @@
-import Role from "../models/role.model.js";
+import {Role} from "../models/role.model.js";
 import ErrorResponse from "../utils/error.response.js";
+import { PERMISSION_GROUPS } from "../constants/permissions.js";
+
+// @desc    Get system configuration (permissions list)
+const getPermissions = (req, res, next) => {
+  // send the entire object directly to the frontend
+  res.status(200).json({
+    success: true,
+    data: PERMISSION_GROUPS
+  });
+};
 
 // @desc    Get all roles
 const getRoles = async (req, res, next) => {
@@ -24,7 +34,6 @@ const createRole = async (req, res, next) => {
       description,
       permissions // Expecting an array like ["product.create", "product.read"]
     });
-
     res.status(201).json({ 
         success: true,
         message: "Role created",
@@ -37,15 +46,20 @@ const createRole = async (req, res, next) => {
 // @desc    Update permissions for a role
 const updateRole = async (req, res, next) => {
   try {
-    const role = await Role.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    });
-
+    const role = await Role.findById(req.params.id);
     if (!role) {
       return next(new ErrorResponse("Role not found", 404));
     }
 
+    role.name = req.body.name || role.name;
+    role.description = req.body.description || role.description;  
+
+    if (req.body.permissions) {
+      role.permissions = req.body.permissions;
+    }
+
+    await role.save();
+    
     res.status(200).json({ 
         success: true, 
         message: "Role updated",
@@ -73,5 +87,5 @@ const deleteRole = async (req, res, next) => {
   }
 };
 
-export { getRoles, createRole, updateRole, deleteRole };
+export { getRoles, createRole, updateRole, deleteRole, getPermissions };
 

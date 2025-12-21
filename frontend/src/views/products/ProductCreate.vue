@@ -1,8 +1,8 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import productApi from '../services/product.service.js';
-import { showError, showSuccess } from '../utils/alert';
+import productService from '../../services/productService.js';
+import { showError, showSuccess } from '../../utils/alert.js';
 
 const router = useRouter();
 
@@ -13,18 +13,18 @@ const loading = ref(false);
 const handleSubmit = async () => {
   loading.value = true;
   try {
-    await productApi.createProduct(form.value);
-    
+    await productService.createProduct(form.value);
+
     await showSuccess('Product has been created successfully.');
-    
-    router.push('/products'); 
-    
+
+    router.push('/products');
+
   } catch (err) {
     console.error(err);
     const message = err.response?.data?.message || 'Failed to create product.';
-    
-    showError(message);   
-    
+
+    showError(message);
+
   } finally {
     loading.value = false;
   }
@@ -35,11 +35,11 @@ const handleSubmit = async () => {
   <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md mt-10">
     <h2 class="text-2xl font-bold mb-6 text-gray-800">Add New Product</h2>
     <form @submit.prevent="handleSubmit" class="space-y-6">
-      
+
       <div>
         <label class="block text-sm font-medium text-gray-700">Product Name</label>
         <input v-model="form.name" type="text" required
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" 
+          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
           placeholder="e.g. Wireless Mouse" />
       </div>
 
@@ -47,13 +47,13 @@ const handleSubmit = async () => {
         <div>
           <label class="block text-sm font-medium text-gray-700">SKU</label>
           <input v-model="form.sku" type="text" required
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" 
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
             placeholder="e.g. WM-001" />
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Category</label>
           <input v-model="form.category" type="text" required
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" 
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
             placeholder="e.g. Electronics" />
         </div>
       </div>

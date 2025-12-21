@@ -1,21 +1,20 @@
 export default [
   {
-    path: '/products',
+    path: '/products/list',
     name: 'products',
-    // Use Lazy Loading (better for performance)
-    component: () => import('@/views/product.view.vue'),
+    component: () => import('@/views/products/ProductView.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/products/create',
     name: 'product-create',
-    component: () => import('@/views/product.create.view.vue'),
+    component: () => import('@/views/products/ProductCreate.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/products/edit/:id',
     name: 'product-edit',
-    component: () => import('@/views/product.edit.view.vue'),
+    component: () => import('@/views/products/ProductEdit.vue'),
     meta: { requiresAuth: true }
   }
 ];

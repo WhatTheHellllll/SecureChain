@@ -8,7 +8,8 @@ export default {
     return api.post('/auth/register', userData);
   },
   logout() {
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     // Any other cleanup
   }
 };

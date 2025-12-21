@@ -1,10 +1,10 @@
 import api from './api';
 
 export default {
-  getAll() {
+  getAllProduct() {
     return api.get('/products/list');
   },
-  getOne(id) {
+  getOneProduct(id) {
     return api.get(`/products/get/${id}`);
   },
   create(data) {

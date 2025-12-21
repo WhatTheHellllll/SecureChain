@@ -1,74 +1,86 @@
 import 'dotenv/config';
 import connectDB from './config/database.js';
-import {User} from "./models/user.model.js";
-import {Role} from "./models/role.model.js";
+import { User } from './models/user.model.js';
+import { Role } from './models/role.model.js';
+import { Product } from './models/product.model.js'; // Import your Product model
+import { PERMISSION_GROUPS } from './constants/permissions.js';
 
 const seedDatabase = async () => {
   try {
-    // Connect to MongoDB
     await connectDB(process.env.MONGO_URI);
-    console.log("🌱 Connected to Database...");
+    console.log('🌱 Connected to Database...');
 
-    // Clear old data (Optional - BE CAREFUL with this in production!)
-    // await User.deleteMany({});
-    // await Role.deleteMany({});
+    // 1. Clear existing data
+    await User.deleteMany({});
+    await Role.deleteMany({});
+    await Product.deleteMany({}); // Clear products
+    console.log('🧹 Cleared old Users, Roles, and Products');
 
-    // Create the "Super Admin" Role
-    let adminRole = await Role.findOne({ name: "super_admin" });
+    // 2. Create Roles
+    const adminRole = await Role.create({
+      name: 'super_admin',
+      description: 'System owner with full access.',
+      permissions: [PERMISSION_GROUPS.ADMIN.ALL],
+    });
 
-    if (!adminRole) {
-      adminRole = await Role.create({
-        name: "super_admin",
-        description: "The Boss. Can do everything.",
-        permissions: ["*"] // Wildcard permission (we'll handle logic for this later)
-      });
-      console.log("👑 Super Admin Role Created");
-    } else {
-      console.log("ℹ️ Admin Role already exists");
-    }
+    const userRole = await Role.create({
+      name: 'user',
+      description: 'Regular customer/viewer.',
+      permissions: [PERMISSION_GROUPS.PRODUCT.READ],
+    });
 
-    let userRole = await Role.findOne({ name: "user" });
+    // 3. Create Admin User (to link to products)
+    const adminUser = await User.create({
+      name: 'Sokun Admin',
+      email: 'admin@securechain.com',
+      password: 'password123',
+      role: adminRole._id,
+      status: 'active',
+    });
 
-    if (!userRole) {
-      userRole = await Role.create({
-        name: "user",
-        description: "Regular user with limited permissions.",
-        permissions: ["read_products", "create_orders"] // Example permissions
-      });
-      console.log("👤 User Role Created");
-    } else {
-      console.log("ℹ️ User Role already exists");
-    }
-    // Create the "Super Admin" User
-    const adminEmail = "admin@securechain.com";
-    const adminExists = await User.findOne({ email: adminEmail });
+    // 4. Seed Products
+    const sampleProducts = [
+      {
+        name: 'Industrial Ethernet Switch',
+        sku: 'NET-ETH-001',
+        quantity: 50,
+        price: 299.99,
+        category: 'Networking',
+        lastUpdatedBy: adminUser._id,
+      },
+      {
+        name: 'Wireless Access Point Pro',
+        sku: 'NET-WAP-002',
+        quantity: 30,
+        price: 150.0,
+        category: 'Networking',
+        lastUpdatedBy: adminUser._id,
+      },
+      {
+        name: 'High-Speed Fiber Cable (10m)',
+        sku: 'CAB-FIB-10M',
+        quantity: 200,
+        price: 45.5,
+        category: 'Cabling',
+        lastUpdatedBy: adminUser._id,
+      },
+      {
+        name: 'Rack Mount Server Chassis',
+        sku: 'SRV-CHA-4U',
+        quantity: 12,
+        price: 550.0,
+        category: 'Hardware',
+        lastUpdatedBy: adminUser._id,
+      },
+    ];
 
-    if (!adminExists) {
-      // Hash password manually since we are bypassing the model .save() hook logic sometimes, 
-      // but sticking to standard create() is safer.
-      // However, since we defined the pre-save hook in user.model.js, 
-      // passing the plain text password here is actually correct! 
-      // The model will hash it for us.
-      
-      await User.create({
-        name: "Sokun Admin",
-        email: adminEmail,
-        password: "password123", // The hook in your model will hash this!
-        role: adminRole._id,     // Link to the Role ID we just found/created
-        status: "active",
-        customPermissions: [],
-        deniedPermissions: []
-      });
-      
-      console.log(`👤 Admin User Created: ${adminEmail} / password123`);
-    } else {
-      console.log("ℹ️ Admin User already exists");
-    }
+    await Product.insertMany(sampleProducts);
+    console.log(`📦 Seeded ${sampleProducts.length} Products`);
 
-    console.log("✅ Seeding Complete!");
+    console.log('✅ Seeding Complete!');
     process.exit(0);
   } catch (error) {
-    console.error("❌ Seeding Failed:", error);
+    console.error('❌ Seeding Failed:', error);
     process.exit(1);
   }
 };

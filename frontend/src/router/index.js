@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import authRoutes from './modules/authentication'; 
 import productRoutes from './modules/product'; 
+import adminRoutes from './modules/admin';
+
 const routes = [
   {
     path: '/',
@@ -8,8 +10,12 @@ const routes = [
   },
   ...authRoutes,   
   ...productRoutes,
-    
+  ...adminRoutes,
 
+  { 
+    path: '/:pathMatch(.*)*', 
+    redirect: '/products/list' 
+  }
   //#region 
   // ,
   // {
@@ -42,13 +48,27 @@ const router = createRouter({
 // THE SECURITY GUARD
 router.beforeEach((to, from, next) => {
   //  Check if the page requires authentication and has a token in LocalStorage (use some incase of nested routes)
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-  if (requiresAuth && !token) {
-      next('/login');
+  
+  // Get the user from sessionStorage
+  const user = sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')) : null;
+
+  if (to.meta.requiresAdmin) {
+    // If no user OR user is not super_admin
+    if (user.role !== 'super_admin') {
+      return next('/'); // Kick them back to Home or Dashboard
+    }
+  }
+
+  const publicPages = ['/login', '/register'];
+  const authRequired = !publicPages.includes(to.path);
+  // if page is private AND user has no token -> Kick them to login
+  if (authRequired && !token) {
+    return next('/login');
   }
   else if ((to.name === 'login' || to.name === 'register') && token) {
-    next('/products'); // Redirect them to dashboard
+    next('/products/list'); // Redirect them to dashboard
   }
   else {
     next();
