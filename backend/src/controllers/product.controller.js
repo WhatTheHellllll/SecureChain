@@ -1,12 +1,14 @@
-import { Product } from '../models/product.model.js';
-import ErrorResponse from '../utils/error.response.js';
+import productService from '../services/product.service.js';
 
-// @desc    Get all products
+/**
+ * @desc    Get all products
+ * @route   GET /api/v1/products
+ * @access  Public (or Private, depending on your app)
+ */
 const getProducts = async (req, res, next) => {
   try {
-    const products = await Product.find()
-      .populate('lastUpdatedBy', 'name email')
-      .sort({ createdAt: -1 });
+    const products = await productService.getAllProducts();
+
     res.status(200).json({
       success: true,
       count: products.length,
@@ -17,16 +19,15 @@ const getProducts = async (req, res, next) => {
   }
 };
 
-// @desc    Get single product
+/**
+ * @desc    Get single product
+ * @route   GET /api/v1/products/:id
+ * @access  Public
+ * @param   {string} req.params.id - The Object ID of the product
+ */
 const getProduct = async (req, res, next) => {
   try {
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      return next(
-        new ErrorResponse(`Product not found with id of ${req.params.id}`, 404)
-      );
-    }
+    const product = await productService.getProductById(req.params.id);
 
     res.status(200).json({
       success: true,
@@ -37,22 +38,20 @@ const getProduct = async (req, res, next) => {
   }
 };
 
-// @desc    Create new product
+/**
+ * @desc    Create new product
+ * @route   POST /api/v1/products
+ * @access  Private (Admin/Manager)
+ * @param   {string} req.body.name - Name of product
+ * @param   {string} req.body.sku - Stock Keeping Unit code
+ * @param   {number} req.body.price - Price of product
+ * @param   {number} req.body.quantity - Inventory count
+ * @param   {string} req.body.category - Category string
+ */
 const createProduct = async (req, res, next) => {
   try {
-    const { name, sku, quantity, price, category } = req.body;
-    //validation
-    if (!name || !sku || !category || !price || !quantity) {
-      return next(new ErrorResponse('Please provide all required fields', 400));
-    }
-    const product = await Product.create({
-      name,
-      sku,
-      quantity,
-      price,
-      category,
-      lastUpdatedBy: req.user._id,
-    });
+    // Service handles creation. We pass req.user._id to track who made it.
+    const product = await productService.createProduct(req.body, req.user._id);
 
     res.status(201).json({
       success: true,
@@ -64,26 +63,20 @@ const createProduct = async (req, res, next) => {
   }
 };
 
-// @desc    Update product
+/**
+ * @desc    Update product
+ * @route   PUT /api/v1/products/:id
+ * @access  Private (Admin/Manager)
+ * @param   {string} [req.body.name] - Updated name
+ * @param   {number} [req.body.price] - Updated price
+ */
 const updateProduct = async (req, res, next) => {
   try {
-    // Prepare the update data by adding the current user's ID
-    const updateData = {
-      ...req.body,
-      lastUpdatedBy: req.user._id,
-    };
-
-    // Perform the update
-    const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
-      new: true, 
-      runValidators: true,
-    }).populate('lastUpdatedBy', 'name'); // Populate immediately so the frontend sees the name
-
-    if (!product) {
-      return next(
-        new ErrorResponse(`Product not found with id of ${req.params.id}`, 404)
-      );
-    }
+    const product = await productService.updateProductById(
+      req.params.id,
+      req.body,
+      req.user._id // Track who updated it
+    );
 
     res.status(200).json({
       success: true,
@@ -95,16 +88,14 @@ const updateProduct = async (req, res, next) => {
   }
 };
 
-// @desc    Delete product
+/**
+ * @desc    Delete product
+ * @route   DELETE /api/v1/products/:id
+ * @access  Private (Admin)
+ */
 const deleteProduct = async (req, res, next) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
-
-    if (!product) {
-      return next(
-        new ErrorResponse(`Product not found with id of ${req.params.id}`, 404)
-      );
-    }
+    await productService.deleteProductById(req.params.id);
 
     res.status(200).json({
       success: true,

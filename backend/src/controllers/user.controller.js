@@ -1,48 +1,40 @@
-import { User } from '../models/user.model.js';
-import ErrorResponse from '../utils/error.response.js';
+import userService from '../services/user.service.js';
 
-// @desc    Update User Role & Permissions
-const assignRolePermissions = async (req, res, next) => {
-  try {
-    const { roleId, customPermissions, deniedPermissions } = req.body;
-
-    // 1. Find the User (Not the Role!)
-    const user = await User.findById(req.params.id);
-
-    if (!user) {
-      return next(new ErrorResponse('User not found', 404));
-    }
-
-    // 2. Update the User's "ID Badge"
-    // (Changing who they are)
-    if (roleId) user.role = roleId;
-
-    // 3. Handle Special Exceptions (Optional but powerful)
-    // "customPermissions" = Extra powers added on top of the role
-    // "deniedPermissions" = Powers removed from the role
-    if (customPermissions) user.customPermissions = customPermissions;
-    if (deniedPermissions) user.deniedPermissions = deniedPermissions;
-
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'User permissions updated successfully',
-      data: user,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-// @desc    Get all users (for the Dashboard list)
+/**
+ * @desc    Get all users (for the Dashboard list)
+ * @route   GET /api/v1/users
+ * @access  Private (Admin)
+ */
 const getUsers = async (req, res, next) => {
   try {
-    const users = await User.find().populate('role');
+    const users = await userService.getAllUsers();
     res.status(200).json({ success: true, data: users });
   } catch (error) {
     next(error);
   }
 };
 
+/**
+ * @desc    Update a user's Role or Permissions
+ * @route   PUT /api/v1/users/:id
+ * @access  Private (Admin)
+ * @param   {string} req.params.id - The User ID to update
+ * @param   {string} [req.body.role] - The new Role ID or name
+ * @param   {string[]} [req.body.permissions] - Optional array of extra permissions
+ */
+const assignRolePermissions = async (req, res, next) => {
+  try {
+    // Pass the ID and the Body (Body is already validated by middleware)
+    const user = await userService.updateUserRoleById(req.params.id, req.body);
+
+    res.status(200).json({
+      success: true,
+      message: 'User updated successfully',
+      data: user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export { getUsers, assignRolePermissions };
-// have not implement update user's name yet because the name property in user model is not a required field

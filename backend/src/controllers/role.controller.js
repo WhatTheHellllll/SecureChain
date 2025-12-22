@@ -1,91 +1,101 @@
-import {Role} from "../models/role.model.js";
-import ErrorResponse from "../utils/error.response.js";
-import { PERMISSION_GROUPS } from "../constants/permissions.js";
+import roleService from '../services/role.service.js';
 
-// @desc    Get system configuration (permissions list)
+/**
+ * @desc    Get system configuration (list of all available permissions)
+ * @route   GET /api/v1/roles/permissions
+ * @access  Private (Admin)
+ */
 const getPermissions = (req, res, next) => {
-  // send the entire object directly to the frontend
-  res.status(200).json({
-    success: true,
-    data: PERMISSION_GROUPS
-  });
+  try {
+    const data = roleService.getPermissionList();
+    res.status(200).json({
+      success: true,
+      data: data,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-// @desc    Get all roles
+/**
+ * @desc    Get all roles
+ * @route   GET /api/v1/roles
+ * @access  Private (Admin)
+ */
 const getRoles = async (req, res, next) => {
   try {
-    const roles = await Role.find();
-    res.status(200).json({ 
-        success: true, 
-        count: roles.length,
-        data: roles });
+    const roles = await roleService.getAllRoles();
+
+    res.status(200).json({
+      success: true,
+      count: roles.length,
+      data: roles,
+    });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Create a new role
+/**
+ * @desc    Create a new role
+ * @route   POST /api/v1/roles
+ * @access  Private (Admin)
+ * @param   {string} req.body.name - Name of the role (e.g., "Manager")
+ * @param   {string[]} req.body.permissions - Array of permission strings
+ */
 const createRole = async (req, res, next) => {
   try {
-    const { name, description, permissions } = req.body;
+    // The service handles the database creation
+    const role = await roleService.createRole(req.body);
 
-    const role = await Role.create({
-      name,
-      description,
-      permissions // Expecting an array like ["product.create", "product.read"]
+    res.status(201).json({
+      success: true,
+      message: 'Role created',
+      data: role,
     });
-    res.status(201).json({ 
-        success: true,
-        message: "Role created",
-        data: role });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Update permissions for a role
+/**
+ * @desc    Update permissions or details for a role
+ * @route   PUT /api/v1/roles/:id
+ * @access  Private (Admin)
+ * @param   {string} req.params.id - The Role ID
+ * @param   {Object} req.body - Fields to update (name, permissions, etc.)
+ */
 const updateRole = async (req, res, next) => {
   try {
-    const role = await Role.findById(req.params.id);
-    if (!role) {
-      return next(new ErrorResponse("Role not found", 404));
-    }
+    const role = await roleService.updateRoleById(req.params.id, req.body);
 
-    role.name = req.body.name || role.name;
-    role.description = req.body.description || role.description;  
-
-    if (req.body.permissions) {
-      role.permissions = req.body.permissions;
-    }
-
-    await role.save();
-    
-    res.status(200).json({ 
-        success: true, 
-        message: "Role updated",
-        data: role });
+    res.status(200).json({
+      success: true,
+      message: 'Role updated',
+      data: role,
+    });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Delete a role
+/**
+ * @desc    Delete a role
+ * @route   DELETE /api/v1/roles/:id
+ * @access  Private (Admin)
+ * @param   {string} req.params.id - The Role ID
+ */
 const deleteRole = async (req, res, next) => {
   try {
-    // Prevent deleting the Super Admin role
-    const role = await Role.findById(req.params.id);
-    if (role.name === 'super_admin') {
-      return next(new ErrorResponse("Cannot delete Super Admin role", 400));
-    }
+    await roleService.deleteRoleById(req.params.id);
 
-    await role.deleteOne();
-    res.status(200).json({ 
-        success: true, 
-        message: "Role deleted" });
+    res.status(200).json({
+      success: true,
+      message: 'Role deleted',
+    });
   } catch (error) {
     next(error);
   }
 };
 
-export { getRoles, createRole, updateRole, deleteRole, getPermissions };
-
+export { getPermissions, getRoles, createRole, updateRole, deleteRole };
