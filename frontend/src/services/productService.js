@@ -4,7 +4,7 @@ export default {
   getAllProduct() {
     return api.get('/products/list');
   },
-  getOneProduct(id) {
+  getProduct(id) {
     return api.get(`/products/get/${id}`);
   },
   create(data) {

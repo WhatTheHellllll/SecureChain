@@ -6,7 +6,7 @@ import { PERMISSION_GROUPS } from "../constants/permissions.js";
 
 const router = Router();
 
-router.route("/update/:id").put(protect, checkPermission(PERMISSION_GROUPS.ADMIN.ALL), assignRolePermissions);
-router.route("/list").get(protect, checkPermission(PERMISSION_GROUPS.ADMIN.ALL), getUsers);
+router.route("/update/:id").put(protect, checkPermission(PERMISSION_GROUPS.ROLE.MANAGE), assignRolePermissions);
+router.route("/list").get(protect, checkPermission(PERMISSION_GROUPS.ROLE.MANAGE), getUsers);
 
 export default router;

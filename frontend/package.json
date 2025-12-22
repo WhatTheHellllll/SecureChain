@@ -12,9 +12,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroicons/vue": "^2.2.0",
     "axios": "^1.13.2",
     "pinia": "^3.0.4",
-    "sweetalert2": "^11.26.10",
+    "sweetalert2": "^11.26.16",
     "vue": "^3.5.25",
     "vue-router": "^4.6.4"
   },

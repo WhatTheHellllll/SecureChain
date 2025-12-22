@@ -2,7 +2,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router"; // useRoute gets the ID from URL
 import productService from "../../services/productService.js";
-import { showError, showSuccess } from '../../utils/alert.js';
+import { showError, showSuccess } from "../../utils/alert.js";
 
 const router = useRouter();
 const route = useRoute(); // Access URL params
@@ -17,7 +17,7 @@ onMounted(async () => {
   try {
     const productId = route.params.id; // Get ID from URL /products/edit/:id
     const response = await productService.getProduct(productId);
-    form.value = response.data; // Fill the form
+    form.value = response.data.data; // Fill the form
   } catch (err) {
     error.value = "Failed to load product details.";
     console.error(err);
@@ -31,13 +31,13 @@ const handleUpdate = async () => {
   saving.value = true;
   try {
     const productId = route.params.id;
-    await productService.updateProduct(productId, form.value);
+    await productService.update(productId, form.value);
 
-    await showSuccess('Product has been updated successfully.');
+    await showSuccess("Product has been updated successfully.");
 
     router.push("/products"); // Redirect to list
   } catch (err) {
-    const message = err.response?.data?.message || 'Failed to create product.';
+    const message = err.response?.data?.message || "Failed to create product.";
 
     showError(message);
   } finally {
@@ -55,7 +55,9 @@ const handleUpdate = async () => {
 
     <form v-else @submit.prevent="handleUpdate" class="space-y-6">
       <div>
-        <label class="block text-sm font-medium text-gray-700">Product Name</label>
+        <label class="block text-sm font-medium text-gray-700"
+          >Product Name</label
+        >
         <input v-model="form.name" type="text" required class="input-field" />
       </div>
 
@@ -65,19 +67,41 @@ const handleUpdate = async () => {
           <input v-model="form.sku" type="text" required class="input-field" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700">Category</label>
-          <input v-model="form.category" type="text" required class="input-field" />
+          <label class="block text-sm font-medium text-gray-700"
+            >Category</label
+          >
+          <input
+            v-model="form.category"
+            type="text"
+            required
+            class="input-field"
+          />
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700">Price ($)</label>
-          <input v-model="form.price" type="number" step="0.01" required class="input-field" />
+          <label class="block text-sm font-medium text-gray-700"
+            >Price ($)</label
+          >
+          <input
+            v-model="form.price"
+            type="number"
+            step="0.01"
+            required
+            class="input-field"
+          />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700">Quantity</label>
-          <input v-model="form.quantity" type="number" required class="input-field" />
+          <label class="block text-sm font-medium text-gray-700"
+            >Quantity</label
+          >
+          <input
+            v-model="form.quantity"
+            type="number"
+            required
+            class="input-field"
+          />
         </div>
       </div>
 

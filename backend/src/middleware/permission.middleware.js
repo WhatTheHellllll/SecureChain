@@ -1,5 +1,6 @@
 import ErrorResponse from "../utils/error.response.js";
 import {User} from "../models/user.model.js";
+import { PERMISSION_GROUPS } from "../constants/permissions.js";
 
 const checkPermission = (requiredPermission) => {
   return async (req, res, next) => {
@@ -12,8 +13,8 @@ const checkPermission = (requiredPermission) => {
       }
 
       // SUPER ADMIN OVERRIDE
-      // If the user's role is 'super_admin', they can do anything.
-      if (user.role.name === 'super_admin') {
+      // If the user's role is 'super_admin' or 'sub_admin', they can do anything.
+      if (user.role.name === PERMISSION_GROUPS.ADMIN.ALL || user.role.name === PERMISSION_GROUPS.ADMIN.SUB_ADMIN) {
         return next();
       }
 

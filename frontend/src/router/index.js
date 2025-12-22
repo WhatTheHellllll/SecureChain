@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import authRoutes from './modules/authentication'; 
 import productRoutes from './modules/product'; 
 import adminRoutes from './modules/admin';
+import { PERMISSION_GROUPS } from "@backend/constants/permissions.js";
 
 const routes = [
   {
@@ -56,7 +57,7 @@ router.beforeEach((to, from, next) => {
 
   if (to.meta.requiresAdmin) {
     // If no user OR user is not super_admin
-    if (user.role !== 'super_admin') {
+    if (user.role !== PERMISSION_GROUPS.ADMIN.SUPER_ADMIN && user.role !== PERMISSION_GROUPS.ADMIN.SUB_ADMIN) {
       return next('/'); // Kick them back to Home or Dashboard
     }
   }
