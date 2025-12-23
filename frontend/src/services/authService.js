@@ -1,15 +1,15 @@
-import api from './api';
+import api from "./api";
 
 export default {
   login(credentials) {
-    return api.post('/auth/login', credentials);
+    return api.post("/auth/login", credentials);
   },
   register(userData) {
-    return api.post('/auth/register', userData);
+    return api.post("/auth/register", userData);
   },
   logout() {
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('user');
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
     // Any other cleanup
-  }
+  },
 };

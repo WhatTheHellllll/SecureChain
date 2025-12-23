@@ -1,6 +1,7 @@
-import { Role } from '../models/role.model.js';
-import ErrorResponse from '../utils/error.response.js';
-import { PERMISSION_GROUPS } from '../constants/permissions.js';
+import { Role } from "../models/role.model.js";
+import ErrorResponse from "../utils/error.response.js";
+import { PERMISSION_GROUPS } from "../constants/permissions.js";
+import { ROLES } from "../constants/roles.js";
 
 /**
  * Get the static list of permissions
@@ -34,7 +35,7 @@ const updateRoleById = async (id, updateData) => {
   const role = await Role.findById(id);
 
   if (!role) {
-    throw new ErrorResponse('Role not found', 404);
+    throw new ErrorResponse("Role not found", 404);
   }
 
   // Update fields if they exist in the updateData
@@ -57,13 +58,12 @@ const deleteRoleById = async (id) => {
   const role = await Role.findById(id);
 
   if (!role) {
-    throw new ErrorResponse('Role not found', 404);
+    throw new ErrorResponse("Role not found", 404);
   }
 
-  // Business Logic: Prevent deleting Super Admin
-  // (Ideally, use a constant for 'super_admin' or check against a flag in the DB)
-  if (role.name === 'Super_Admin' || role.name === 'super_admin') {
-    throw new ErrorResponse('Cannot delete Super Admin role', 400);
+  // Prevent deleting Super Admin
+  if (role.name === ROLES.SUPER_ADMIN) {
+    throw new ErrorResponse("Cannot delete Super Admin role", 400);
   }
 
   await role.deleteOne();

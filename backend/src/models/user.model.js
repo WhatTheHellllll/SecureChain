@@ -1,6 +1,7 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcrypt';
-import { VALID_PERMISSIONS } from '../constants/permissions.js';
+import mongoose from "mongoose";
+import bcrypt from "bcrypt";
+import { VALID_PERMISSIONS } from "../constants/permissions.js";
+import jwt from "jsonwebtoken";
 
 const userSchema = mongoose.Schema(
   {
@@ -10,14 +11,14 @@ const userSchema = mongoose.Schema(
     },
     email: {
       type: String,
-      required: [true, 'Please add an email'],
+      required: [true, "Please add an email"],
       unique: true,
       trim: true,
       lowercase: true,
     },
     password: {
       type: String,
-      required: [true, 'Please add a password'],
+      required: [true, "Please add a password"],
       minlength: 6,
       select: false,
     },
@@ -26,7 +27,7 @@ const userSchema = mongoose.Schema(
     // This lets us look up the role's permissions later.
     role: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Role',
+      ref: "Role",
       required: true,
     },
 
@@ -47,16 +48,16 @@ const userSchema = mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['active', 'suspended'],
-      default: 'active',
+      enum: ["active", "suspended"],
+      default: "active",
     },
   },
   { timestamps: true }
 );
 
 // SECURITY: Hash the password before saving
-userSchema.pre('save', async function () {
-  if (!this.isModified('password')) {
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) {
     return;
   }
   const salt = await bcrypt.genSalt(10);
@@ -68,4 +69,11 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-export const User = mongoose.model('User', userSchema);
+userSchema.methods.getSignedJwtToken = function () {
+  return jwt.sign(
+    { id: this._id }, // Payload: Embed the User's ID inside the token
+    process.env.JWT_SECRET, // Secret Key: Uses your .env password to lock it
+    { expiresIn: process.env.JWT_EXPIRE } // Expiration: e.g., '30d'
+  );
+};
+export const User = mongoose.model("User", userSchema);

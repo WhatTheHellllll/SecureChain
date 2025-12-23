@@ -1,27 +1,17 @@
 <script setup>
 import { RouterLink, useRouter } from "vue-router";
-import { ref, onMounted } from "vue";
+import { computed } from "vue";
 import { PERMISSION_GROUPS } from "@backend/constants/permissions.js";
-
+import { useAuthStore } from "@/store/authStore";
 const router = useRouter();
 
-const currentUser = ref(null);
+const authStore = useAuthStore();
 
-onMounted(() => {
-  // 1. Get the string from storage
-  const userSession = sessionStorage.getItem("user");
-
-  // 2. Turn it back into an Object (if it exists)
-  if (userSession) {
-    currentUser.value = JSON.parse(userSession);
-  }
-});
+const currentUser = computed(() => authStore.user);
 
 const handleLogout = () => {
   // 1. Delete the keys
-  sessionStorage.removeItem("token");
-  sessionStorage.removeItem("user");
-
+  authStore.logout();
   // 2. Go to login
   router.push("/login");
 };

@@ -25,12 +25,12 @@ const fetchData = async () => {
     ]);
     const currentUser = JSON.parse(sessionStorage.getItem("user"));
 
-    if (currentUser.role === PERMISSION_GROUPS.ADMIN.SUPER_ADMIN) {
+    if (currentUser.role.name === PERMISSION_GROUPS.ADMIN.SUPER_ADMIN) {
       // Super Admin can see all users
       users.value = userRes.data.data.filter(
         (user) => user.role?.name !== PERMISSION_GROUPS.ADMIN.SUPER_ADMIN
       );
-    } else if (currentUser.role === PERMISSION_GROUPS.ADMIN.SUB_ADMIN) {
+    } else if (currentUser.role.name === PERMISSION_GROUPS.ADMIN.SUB_ADMIN) {
       // Other admins cannot see super_admin and sub_admin users
       users.value = userRes.data.data.filter(
         (user) =>

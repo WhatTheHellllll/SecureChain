@@ -1,43 +1,40 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
   getRoles,
   createRole,
   updateRole,
   deleteRole,
   getPermissions,
-} from '../controllers/role.controller.js';
-import { protect } from '../middleware/auth.middleware.js';
-import { checkPermission } from '../middleware/permission.middleware.js';
-import { PERMISSION_GROUPS } from '../constants/permissions.js';
-import validate from '../middleware/validation.middleware.js';
-import roleSchema from '../validators/role.schema.js';
-
+} from "../controllers/role.controller.js";
+import { protect } from "../middleware/auth.middleware.js";
+import { checkPermission } from "../middleware/permission.middleware.js";
+import validate from "../middleware/validation.middleware.js";
+import roleSchema from "../validators/role.schema.js";
+import { ROLES } from "../constants/roles.js";
 const router = Router();
 
 router
-  .route('/permissions')
-  .get(protect, checkPermission(PERMISSION_GROUPS.ROLE.MANAGE), getPermissions);
+  .route("/permissions")
+  .get(protect, checkPermission(ROLES.SUB_ADMIN), getPermissions);
+router.route("/list").get(protect, checkPermission(ROLES.SUB_ADMIN), getRoles);
 router
-  .route('/list')
-  .get(protect, checkPermission(PERMISSION_GROUPS.ROLE.MANAGE), getRoles);
-router
-  .route('/create')
+  .route("/create")
   .post(
     protect,
     validate(roleSchema.createRoleSchema),
-    checkPermission(PERMISSION_GROUPS.ROLE.MANAGE),
+    checkPermission(ROLES.SUB_ADMIN),
     createRole
   );
 router
-  .route('/update/:id')
+  .route("/update/:id")
   .put(
     protect,
     validate(roleSchema.updateRoleSchema),
-    checkPermission(PERMISSION_GROUPS.ROLE.MANAGE),
+    checkPermission(ROLES.SUB_ADMIN),
     updateRole
   );
 router
-  .route('/delete/:id')
-  .delete(protect, checkPermission(PERMISSION_GROUPS.ROLE.MANAGE), deleteRole);
+  .route("/delete/:id")
+  .delete(protect, checkPermission(ROLES.SUB_ADMIN), deleteRole);
 
 export default router;

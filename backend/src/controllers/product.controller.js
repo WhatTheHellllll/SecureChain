@@ -1,4 +1,4 @@
-import productService from '../services/product.service.js';
+import productService from "../services/product.service.js";
 
 /**
  * @desc    Get all products
@@ -55,7 +55,7 @@ const createProduct = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: 'Product created',
+      message: "Product created",
       data: product,
     });
   } catch (error) {
@@ -80,7 +80,7 @@ const updateProduct = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Product updated successfully',
+      message: "Product updated successfully",
       data: product,
     });
   } catch (error) {
@@ -99,7 +99,7 @@ const deleteProduct = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Product deleted',
+      message: "Product deleted",
     });
   } catch (error) {
     next(error);

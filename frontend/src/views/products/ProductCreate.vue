@@ -1,11 +1,17 @@
 <script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { ref, computed } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import productService from "../../services/productService.js";
 import { showError, showSuccess } from "../../utils/alert.js";
 
 const router = useRouter();
+const route = useRoute();
 
+const isAdminMode = computed(() => route.path.startsWith("/admin"));
+
+const productRouteName = computed(() =>
+  isAdminMode.value ? "admin-products-list" : "public-products-list"
+);
 const form = ref({ name: "", sku: "", category: "", price: 0, quantity: 0 });
 const error = ref(null);
 const loading = ref(false);
@@ -17,7 +23,7 @@ const handleSubmit = async () => {
 
     await showSuccess("Product has been created successfully.");
 
-    router.push("/products");
+    router.push({ name: productRouteName.value });
   } catch (err) {
     console.error(err);
     const message = err.response?.data?.message || "Failed to create product.";
@@ -99,7 +105,7 @@ const handleSubmit = async () => {
 
       <div class="flex justify-end space-x-3 pt-4">
         <RouterLink
-          to="/products"
+          :to="{ name: productRouteName }"
           class="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
         >
           Cancel

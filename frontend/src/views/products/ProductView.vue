@@ -1,14 +1,29 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import productService from "../../services/productService.js";
-import { RouterLink } from "vue-router";
+import { RouterLink, useRoute } from "vue-router";
 import { confirmDelete, showSuccess } from "../../utils/alert.js";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/vue/24/solid";
+import { usePermission } from "../../composables/usePermission.js";
+import { useAuthStore } from "../../store/authStore.js";
 
+const route = useRoute();
+const authStore = useAuthStore();
 const products = ref([]);
 const loading = ref(true);
 const error = ref(null);
 const searchQuery = ref("");
+
+const isAdminMode = computed(() => route.path.startsWith("/admin"));
+
+// Dynamically choose which route name to use
+const editRouteName = computed(() =>
+  isAdminMode.value ? "admin-product-edit" : "public-product-edit"
+);
+
+const createRouteName = computed(() =>
+  isAdminMode.value ? "admin-product-create" : "public-product-create"
+);
 
 const fetchProducts = async () => {
   try {
@@ -48,14 +63,48 @@ const filteredProducts = computed(() => {
 onMounted(() => {
   fetchProducts();
 });
+const { can } = usePermission();
+
+// // 👇 NEW: Create the combined list just for display
+// const allPermissions = computed(() => {
+//   const user = authStore.user;
+//   if (!user) return [];
+
+//   // 1. Get Role Permissions (and flatten nested arrays)
+//   const rolePerms = (user.role?.permissions || []).flat();
+
+//   // 2. Get Custom User Permissions
+//   const customPerms = (user.customPermissions || []).flat();
+
+//   // 3. Combine them and remove duplicates
+//   return [...new Set([...rolePerms, ...customPerms])];
+// });
 </script>
 
 <template>
+  <!-- <div class="bg-yellow-100 p-4 mb-4 border border-yellow-400 text-sm">
+    <p><strong>My Role:</strong> {{ authStore.user?.role?.name }}</p>
+
+    <p class="mt-2">
+      <strong>All Effective Permissions:</strong><br />
+      <span class="text-xs font-mono bg-white px-1 rounded">
+        {{ allPermissions }}
+      </span>
+    </p>
+
+    <p class="mt-2 text-red-600">
+      <strong>Banned:</strong> {{ authStore.user?.deniedPermissions }}
+    </p>
+
+    <p class="mt-2 font-bold text-blue-600">
+      Can Update? {{ can("product.update") }}
+    </p>
+  </div> -->
   <div class="p-6">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold text-gray-800">Product Management</h2>
       <RouterLink
-        to="/products/create"
+        :to="{ name: createRouteName }"
         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm"
       >
         + Add Product
@@ -186,7 +235,8 @@ onMounted(() => {
               >
                 <div class="flex items-center justify-start space-x-2">
                   <RouterLink
-                    :to="`/products/edit/${product._id}`"
+                    v-if="can('product.update')"
+                    :to="{ name: editRouteName, params: { id: product._id } }"
                     class="text-indigo-600 hover:text-indigo-900 p-1 hover:bg-indigo-50 rounded-full transition"
                     title="Edit Product"
                   >

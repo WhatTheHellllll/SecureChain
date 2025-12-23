@@ -29,7 +29,7 @@ const fetchRoles = async () => {
     // 2. Fetch Permissions
     const permRes = await roleService.getPermissions();
     const rawData = permRes.data.data;
-
+    
     if (rawData) {
       const cleanData = {};
       for (const groupName in rawData) {

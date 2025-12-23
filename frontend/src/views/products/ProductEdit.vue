@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter, useRoute } from "vue-router"; // useRoute gets the ID from URL
 import productService from "../../services/productService.js";
 import { showError, showSuccess } from "../../utils/alert.js";
@@ -11,6 +11,12 @@ const form = ref({ name: "", sku: "", category: "", price: 0, quantity: 0 });
 const loading = ref(true);
 const saving = ref(false);
 const error = ref(null);
+
+const isAdminMode = computed(() => route.path.startsWith("/admin"));
+
+const productRouteName = computed(() =>
+  isAdminMode.value ? "admin-products-list" : "public-products-list"
+);
 
 // 1. Load Data on Mount
 onMounted(async () => {
@@ -35,7 +41,7 @@ const handleUpdate = async () => {
 
     await showSuccess("Product has been updated successfully.");
 
-    router.push("/products"); // Redirect to list
+    router.push({ name: productRouteName.value }); // Redirect to list
   } catch (err) {
     const message = err.response?.data?.message || "Failed to create product.";
 
@@ -106,7 +112,9 @@ const handleUpdate = async () => {
       </div>
 
       <div class="flex justify-end space-x-3 pt-4">
-        <RouterLink to="/products" class="btn-secondary">Cancel</RouterLink>
+        <RouterLink :to="{ name: productRouteName }" class="btn-secondary"
+          >Cancel</RouterLink
+        >
         <button type="submit" :disabled="saving" class="btn-primary">
           {{ saving ? "Updating..." : "Update Product" }}
         </button>

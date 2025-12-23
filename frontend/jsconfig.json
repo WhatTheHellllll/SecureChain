@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["src/*"],
+      "@backend/*": ["../backend/src/*"],
+      "@backendRole/*": ["..backend/src/*"]
     }
   },
   "exclude": ["node_modules", "dist"]

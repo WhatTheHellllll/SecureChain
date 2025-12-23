@@ -37,7 +37,7 @@ const seedDatabase = async () => {
     // Role B: Sub Admin (The Manager of Managers)
     // Can manage Products and Users, but cannot touch Roles or System Settings
     const subAdminRole = await Role.create({
-      name: 'sub_admin',
+      name: 'admin',
       description: 'Can manage products and users, but not roles.',
       permissions: [
         ...allProductPerms, // Full Product Access

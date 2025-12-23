@@ -4,28 +4,23 @@ const PERMISSION_GROUPS = {
     READ: "product.read",
     CREATE: "product.create",
     UPDATE: "product.update",
-    DELETE: "product.delete"
+    DELETE: "product.delete",
   },
-  
+
   // Group 2: Users
   USER: {
     READ: "user.read",
     CREATE: "user.create",
     UPDATE: "user.update",
     DELETE: "user.delete", // (e.g., Ban user)
-    MANAGE_PERMISSIONS: "user.manage_permissions"
+    MANAGE_PERMISSIONS: "user.manage_permissions",
   },
 
   // Group 3: Roles
   ROLE: {
     READ: "role.read",
-    MANAGE: "role.manage"
+    MANAGE: "role.manage",
   },
-
-  ADMIN: {
-    SUPER_ADMIN: "super_admin",
-    SUB_ADMIN: "sub_admin"
-  }
 };
 
 // Helper: Flatten them for validation (Mongoose needs a flat list)
