@@ -1,7 +1,7 @@
 <script setup>
 import { RouterLink, useRouter } from "vue-router";
 import { computed } from "vue";
-import { PERMISSION_GROUPS } from "@backend/constants/permissions.js";
+import { ROLES } from "@backend/constants/roles";
 import { useAuthStore } from "@/store/authStore";
 const router = useRouter();
 
@@ -32,8 +32,8 @@ const handleLogout = () => {
 
         <router-link
           v-if="
-            currentUser?.role === PERMISSION_GROUPS.ADMIN.SUPER_ADMIN ||
-            currentUser?.role === PERMISSION_GROUPS.ADMIN.SUB_ADMIN
+            currentUser?.role === ROLES.SUPER_ADMIN ||
+            currentUser?.role === ROLES.SUB_ADMIN
           "
           to="/admin/users"
           class="text-sm font-bold flex items-center gap-2 hover:text-blue-400 transition"
@@ -43,8 +43,8 @@ const handleLogout = () => {
 
         <router-link
           v-if="
-            currentUser?.role === PERMISSION_GROUPS.ADMIN.SUPER_ADMIN ||
-            currentUser?.role === PERMISSION_GROUPS.ADMIN.SUB_ADMIN
+            currentUser?.role === ROLES.SUPER_ADMIN ||
+            currentUser?.role === ROLES.SUB_ADMIN
           "
           to="/admin/roles"
           class="text-sm font-bold flex items-center gap-2 hover:text-blue-400 transition"

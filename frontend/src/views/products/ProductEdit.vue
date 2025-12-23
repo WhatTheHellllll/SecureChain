@@ -3,10 +3,12 @@ import { ref, onMounted, computed } from "vue";
 import { useRouter, useRoute } from "vue-router"; // useRoute gets the ID from URL
 import productService from "../../services/productService.js";
 import { showError, showSuccess } from "../../utils/alert.js";
+import { usePermission } from "../../composables/usePermission.js";
+import { PERMISSION_GROUPS } from "@backend/constants/permissions.js";
 
 const router = useRouter();
 const route = useRoute(); // Access URL params
-
+const { can } = usePermission();
 const form = ref({ name: "", sku: "", category: "", price: 0, quantity: 0 });
 const loading = ref(true);
 const saving = ref(false);
@@ -21,6 +23,11 @@ const productRouteName = computed(() =>
 // 1. Load Data on Mount
 onMounted(async () => {
   try {
+    if (!can(PERMISSION_GROUPS.PRODUCT.UPDATE)) {
+      showError("You do not have permission to edit products.");
+      router.push("/products"); // Kick them out
+    }
+
     const productId = route.params.id; // Get ID from URL /products/edit/:id
     const response = await productService.getProduct(productId);
     form.value = response.data.data; // Fill the form

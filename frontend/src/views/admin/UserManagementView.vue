@@ -5,6 +5,7 @@ import roleService from "../../services/roleService.js";
 import { showError } from "../../utils/alert.js";
 import UserEditModal from "../../components/admin/UserEditModal.vue";
 import { PERMISSION_GROUPS } from "@backend/constants/permissions.js";
+import { ROLES } from "@backend/constants/roles.js";
 
 const users = ref([]);
 const roles = ref([]);
@@ -25,17 +26,17 @@ const fetchData = async () => {
     ]);
     const currentUser = JSON.parse(sessionStorage.getItem("user"));
 
-    if (currentUser.role.name === PERMISSION_GROUPS.ADMIN.SUPER_ADMIN) {
+    if (currentUser.role.name === ROLES.SUPER_ADMIN) {
       // Super Admin can see all users
       users.value = userRes.data.data.filter(
-        (user) => user.role?.name !== PERMISSION_GROUPS.ADMIN.SUPER_ADMIN
+        (user) => user.role?.name !== ROLES.SUPER_ADMIN
       );
-    } else if (currentUser.role.name === PERMISSION_GROUPS.ADMIN.SUB_ADMIN) {
+    } else if (currentUser.role.name === ROLES.SUB_ADMIN) {
       // Other admins cannot see super_admin and sub_admin users
       users.value = userRes.data.data.filter(
         (user) =>
-          user.role?.name !== PERMISSION_GROUPS.ADMIN.SUPER_ADMIN &&
-          user.role?.name !== PERMISSION_GROUPS.ADMIN.SUB_ADMIN
+          user.role?.name !== ROLES.SUPER_ADMIN &&
+          user.role?.name !== ROLES.SUB_ADMIN
       );
     }
 
@@ -43,8 +44,7 @@ const fetchData = async () => {
     roles.value = roleRes.data.data
       .filter(
         (role) =>
-          role.name !== PERMISSION_GROUPS.ADMIN.SUPER_ADMIN &&
-          role.name !== PERMISSION_GROUPS.ADMIN.SUB_ADMIN
+          role.name !== ROLES.SUPER_ADMIN && role.name !== ROLES.SUB_ADMIN
       )
       .map((role) => ({
         ...role,
@@ -63,9 +63,7 @@ const fetchData = async () => {
         // 2. Filter out Wildcard '*' from individual items
         const groupValues = Object.values(rawData[groupName]);
         cleanData[groupName] = groupValues.filter(
-          (p) =>
-            p !== PERMISSION_GROUPS.ADMIN.SUPER_ADMIN &&
-            p !== PERMISSION_GROUPS.ADMIN.SUB_ADMIN
+          (p) => p !== PERMISSION_GROUPS.ADMIN.SUPER_ADMIN
         );
       }
       permissionGroups.value = cleanData;

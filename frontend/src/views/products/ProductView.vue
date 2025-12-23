@@ -1,12 +1,14 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import productService from "../../services/productService.js";
-import { RouterLink, useRoute } from "vue-router";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 import { confirmDelete, showSuccess } from "../../utils/alert.js";
 import { PencilSquareIcon, TrashIcon } from "@heroicons/vue/24/solid";
 import { usePermission } from "../../composables/usePermission.js";
 import { useAuthStore } from "../../store/authStore.js";
+import { PERMISSION_GROUPS } from "@backend/constants/permissions.js";
 
+const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 const products = ref([]);
@@ -38,14 +40,34 @@ const fetchProducts = async () => {
 };
 
 const handleDelete = async (id) => {
-  if (await confirmDelete()) {
-    await productService.delete(id);
-    products.value = products.value.filter((p) => p._id !== id);
+  const permissionRequired = PERMISSION_GROUPS.PRODUCT.DELETE;
+  const hasPermission = can(permissionRequired);
 
-    showSuccess("Product deleted successfully!");
+  // console.log("Role Permissions:", authStore.user.role?.permissions);
+  // console.log("Custom Permissions:", authStore.user.customPermissions);
+  // console.log("Checking against string:", PERMISSION_GROUPS.PRODUCT.DELETE);
+  // // DEBUG LOGS - Open your browser console (F12) to see these
+  // console.log("Checking permission for:", permissionRequired);
+  // console.log("User has permission?", hasPermission);
+  // console.log("Full User Data:", authStore.user);
+
+  if (!hasPermission) {
+    showError("Access Denied!");
+    return; // This MUST stop the function
+  }
+  if (await confirmDelete()) {
+    try {
+      await productService.delete(id);
+      products.value = products.value.filter((p) => p._id !== id);
+      showSuccess("Product deleted successfully!");
+    } catch (error) {
+      showError("Server denied the request.");
+    }
   }
 };
-
+const goToEdit = (id) => {
+  router.push({ name: editRouteName.value, params: { id } });
+};
 // Search Logic (Computed)
 const filteredProducts = computed(() => {
   // If search is empty, return everything
@@ -234,19 +256,20 @@ const { can } = usePermission();
                 class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium space-x-3"
               >
                 <div class="flex items-center justify-start space-x-2">
-                  <RouterLink
-                    v-if="can('product.update')"
-                    :to="{ name: editRouteName, params: { id: product._id } }"
-                    class="text-indigo-600 hover:text-indigo-900 p-1 hover:bg-indigo-50 rounded-full transition"
-                    title="Edit Product"
+                  <button
+                    type="button"
+                    :disabled="!can(PERMISSION_GROUPS.PRODUCT.UPDATE)"
+                    @click="goToEdit(product._id)"
+                    class="p-1 rounded-full transition text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 disabled:text-gray-400 disabled:bg-transparent disabled:cursor-not-allowed"
                   >
                     <PencilSquareIcon class="h-5 w-5" />
-                  </RouterLink>
+                  </button>
 
                   <button
+                    type="button"
+                    :disabled="!can(PERMISSION_GROUPS.PRODUCT.DELETE)"
                     @click="handleDelete(product._id)"
-                    class="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded-full transition"
-                    title="Delete Product"
+                    class="p-1 rounded-full transition text-red-600 hover:text-red-900 hover:bg-red-50 disabled:text-gray-400 disabled:bg-transparent disabled:cursor-not-allowed"
                   >
                     <TrashIcon class="h-5 w-5" />
                   </button>

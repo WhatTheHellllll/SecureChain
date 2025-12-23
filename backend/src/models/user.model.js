@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import { VALID_PERMISSIONS } from "../constants/permissions.js";
 import jwt from "jsonwebtoken";
-
+import { ROLES } from "../constants/roles.js";
 const userSchema = mongoose.Schema(
   {
     name: {

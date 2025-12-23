@@ -23,12 +23,12 @@ const menuItems = computed(() => [
   {
     label: "Manage Roles",
     path: "/admin/roles",
-    show: isSuperAdmin.value, // <-- ONLY SUPER ADMIN
+    show: isSuperAdmin.value || isAdmin.value,
   },
   {
     label: "Manage Users",
     path: "/admin/users",
-    show: isAdmin.value || isSuperAdmin.value, // <-- ADMINS Only
+    show: isSuperAdmin.value || isAdmin.value,
   },
 ]);
 </script>

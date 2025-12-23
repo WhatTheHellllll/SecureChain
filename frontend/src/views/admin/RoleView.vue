@@ -3,8 +3,8 @@ import { ref, onMounted } from "vue";
 import roleService from "../../services/roleService.js";
 import { showSuccess, showError, confirmDelete } from "../../utils/alert.js";
 import PermissionSelector from "../../components/admin/PermissionSelector.vue";
+import { ROLES } from "@backend/constants/roles.js";
 import { PERMISSION_GROUPS } from "@backend/constants/permissions.js";
-
 // STATE
 const roles = ref([]);
 const selectedRole = ref(null);
@@ -21,15 +21,13 @@ const fetchRoles = async () => {
     const roleRes = await roleService.getRoles();
     // REQUEST #1: Hide 'super_admin'
     roles.value = roleRes.data.data.filter(
-      (role) =>
-        role.name !== PERMISSION_GROUPS.ADMIN.SUPER_ADMIN &&
-        role.name !== PERMISSION_GROUPS.ADMIN.SUB_ADMIN
+      (role) => role.name !== ROLES.SUPER_ADMIN && role.name !== ROLES.SUB_ADMIN
     );
 
     // 2. Fetch Permissions
     const permRes = await roleService.getPermissions();
     const rawData = permRes.data.data;
-    
+
     if (rawData) {
       const cleanData = {};
       for (const groupName in rawData) {

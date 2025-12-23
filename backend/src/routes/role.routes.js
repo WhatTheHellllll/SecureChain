@@ -10,19 +10,21 @@ import { protect } from "../middleware/auth.middleware.js";
 import { checkPermission } from "../middleware/permission.middleware.js";
 import validate from "../middleware/validation.middleware.js";
 import roleSchema from "../validators/role.schema.js";
-import { ROLES } from "../constants/roles.js";
+import { PERMISSION_GROUPS } from "../constants/permissions.js";
 const router = Router();
 
 router
   .route("/permissions")
-  .get(protect, checkPermission(ROLES.SUB_ADMIN), getPermissions);
-router.route("/list").get(protect, checkPermission(ROLES.SUB_ADMIN), getRoles);
+  .get(protect, checkPermission(PERMISSION_GROUPS.SUB_ADMIN), getPermissions);
+router
+  .route("/list")
+  .get(protect, checkPermission(PERMISSION_GROUPS.SUB_ADMIN), getRoles);
 router
   .route("/create")
   .post(
     protect,
     validate(roleSchema.createRoleSchema),
-    checkPermission(ROLES.SUB_ADMIN),
+    checkPermission(PERMISSION_GROUPS.SUB_ADMIN),
     createRole
   );
 router
@@ -30,11 +32,11 @@ router
   .put(
     protect,
     validate(roleSchema.updateRoleSchema),
-    checkPermission(ROLES.SUB_ADMIN),
+    checkPermission(PERMISSION_GROUPS.SUB_ADMIN),
     updateRole
   );
 router
   .route("/delete/:id")
-  .delete(protect, checkPermission(ROLES.SUB_ADMIN), deleteRole);
+  .delete(protect, checkPermission(PERMISSION_GROUPS.SUB_ADMIN), deleteRole);
 
 export default router;

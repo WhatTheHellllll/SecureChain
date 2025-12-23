@@ -21,6 +21,10 @@ const PERMISSION_GROUPS = {
     READ: "role.read",
     MANAGE: "role.manage",
   },
+  ADMIN: {
+    SUPER_ADMIN: "*",
+    SUB_ADMIN: "sub_admin",
+  },
 };
 
 // Helper: Flatten them for validation (Mongoose needs a flat list)

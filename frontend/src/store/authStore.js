@@ -37,6 +37,7 @@ export const useAuthStore = defineStore("auth", {
         return response;
       } catch (err) {
         this.error = err.response?.data?.error || "Login failed";
+        console.log(err);
         throw err; // Re-throw so the View can show the specific alert
       } finally {
         this.loading = false;
@@ -52,7 +53,7 @@ export const useAuthStore = defineStore("auth", {
         return response;
       } catch (err) {
         this.error = err.response?.data?.error || "Registration failed";
-        throw err;
+        throw err.response;
       } finally {
         this.loading = false;
       }

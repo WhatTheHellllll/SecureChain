@@ -2,9 +2,9 @@ import { createRouter, createWebHistory } from "vue-router";
 import authRoutes from "./modules/authentication";
 import productRoutes from "./modules/product";
 import adminRoutes from "./modules/admin";
-import { PERMISSION_GROUPS } from "@backend/constants/permissions.js";
+import { ROLES } from "@backend/constants/roles";
 import { useAuthStore } from "../store/authStore";
-
+import { computed } from "vue";
 const routes = [
   {
     path: "/",
@@ -29,7 +29,6 @@ const router = createRouter({
 // THE SECURITY GUARD
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
-
   // General Auth Protection
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return next("/login");
@@ -38,8 +37,8 @@ router.beforeEach((to, from, next) => {
   // Admin Route Protection
   if (to.meta.requiresAdmin) {
     const role = authStore.user?.role || "viewer";
-    const isSuperAdmin = role.name === PERMISSION_GROUPS.ADMIN.SUPER_ADMIN;
-    const isSubAdmin = role.name === PERMISSION_GROUPS.ADMIN.SUB_ADMIN;
+    const isSuperAdmin = role.name === ROLES.SUPER_ADMIN;
+    const isSubAdmin = role.name === ROLES.SUB_ADMIN;
     // If no user OR user is not super_admin
     if (!role || (!isSuperAdmin && !isSubAdmin)) {
       return next("/products/list");

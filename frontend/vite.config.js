@@ -13,7 +13,6 @@ export default defineConfig({
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
       "@backend": path.resolve(__dirname, "../backend/src"),
-      "@backendRole": path.resolve(__dirname, "../backend/src"),
     },
   },
   server: {
