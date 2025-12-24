@@ -1,4 +1,4 @@
-import userService from '../services/user.service.js';
+import userService from "../services/user.service.js";
 
 /**
  * @desc    Get all users (for the Dashboard list)
@@ -7,7 +7,7 @@ import userService from '../services/user.service.js';
  */
 const getUsers = async (req, res, next) => {
   try {
-    const users = await userService.getAllUsers();
+    const users = await userService.getAllUsers(req.user);
     res.status(200).json({ success: true, data: users });
   } catch (error) {
     next(error);
@@ -24,12 +24,16 @@ const getUsers = async (req, res, next) => {
  */
 const assignRolePermissions = async (req, res, next) => {
   try {
-    // Pass the ID and the Body (Body is already validated by middleware)
-    const user = await userService.updateUserRoleById(req.params.id, req.body);
+    // Pass the target ID, the new data, AND the person making the request
+    const user = await userService.updateUserRoleById(
+      req.params.id,
+      req.body,
+      req.user
+    );
 
     res.status(200).json({
       success: true,
-      message: 'User updated successfully',
+      message: "User updated successfully",
       data: user,
     });
   } catch (error) {

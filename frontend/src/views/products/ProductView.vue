@@ -3,7 +3,11 @@ import { ref, onMounted, computed } from "vue";
 import productService from "../../services/productService.js";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import { confirmDelete, showSuccess } from "../../utils/alert.js";
-import { PencilSquareIcon, TrashIcon } from "@heroicons/vue/24/solid";
+import {
+  PencilSquareIcon,
+  TrashIcon,
+  PlusCircleIcon,
+} from "@heroicons/vue/24/solid";
 import { usePermission } from "../../composables/usePermission.js";
 import { useAuthStore } from "../../store/authStore.js";
 import { PERMISSION_GROUPS } from "@backend/constants/permissions.js";
@@ -68,6 +72,9 @@ const handleDelete = async (id) => {
 const goToEdit = (id) => {
   router.push({ name: editRouteName.value, params: { id } });
 };
+const goToCreate = () => {
+  router.push({ name: createRouteName.value });
+};
 // Search Logic (Computed)
 const filteredProducts = computed(() => {
   // If search is empty, return everything
@@ -118,8 +125,9 @@ onMounted(() => {
         >
           🚫 Banned: {{ authStore.user.deniedPermissions }}
         </p>
-        <p class="text-blue-400" v-if="allPermissions">
-          📜 Effective List: {{ [...allPermissions] }}
+        <p class="text-blue-400">
+          📜 Effective List:
+          {{ allPermissions ? [...allPermissions] : "Loading..." }}
         </p>
       </div>
     </div>
@@ -127,7 +135,7 @@ onMounted(() => {
     <div class="mt-4 pt-2 border-t border-slate-700 flex gap-4">
       <span :class="can('product.update') ? 'text-green-400' : 'text-red-500'">
         Update: {{ can("product.update") ? "ALLOWED" : "DENIED" }}
-      </span>
+      </span> 
       <span :class="can('product.delete') ? 'text-green-400' : 'text-red-500'">
         Delete: {{ can("product.delete") ? "ALLOWED" : "DENIED" }}
       </span>
@@ -136,12 +144,15 @@ onMounted(() => {
   <div class="p-6">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold text-gray-800">Product Management</h2>
-      <RouterLink
-        :to="{ name: createRouteName }"
-        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition shadow-sm"
+      <button
+        type="button"
+        :disabled="!can(PERMISSION_GROUPS.PRODUCT.CREATE)"
+        @click="goToCreate()"
+        class="flex items-center gap-2 p-2 rounded-lg transition text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 disabled:text-gray-400 disabled:bg-transparent disabled:cursor-not-allowed"
       >
-        + Add Product
-      </RouterLink>
+        <PlusCircleIcon class="h-5 w-5" />
+        <span class="font-medium">Create Product</span>
+      </button>
     </div>
 
     <div class="mb-4">

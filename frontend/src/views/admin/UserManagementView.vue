@@ -19,28 +19,18 @@ const selectedUser = ref(null);
 const fetchData = async () => {
   loading.value = true;
   try {
+    // 1. Fetch all data in parallel
     const [userRes, roleRes, permRes] = await Promise.all([
       adminService.getAllUsers(),
       roleService.getRoles(),
       roleService.getPermissions(),
     ]);
-    const currentUser = JSON.parse(sessionStorage.getItem("user"));
 
-    if (currentUser.role.name === ROLES.SUPER_ADMIN) {
-      // Super Admin can see all users
-      users.value = userRes.data.data.filter(
-        (user) => user.role?.name !== ROLES.SUPER_ADMIN
-      );
-    } else if (currentUser.role.name === ROLES.SUB_ADMIN) {
-      // Other admins cannot see super_admin and sub_admin users
-      users.value = userRes.data.data.filter(
-        (user) =>
-          user.role?.name !== ROLES.SUPER_ADMIN &&
-          user.role?.name !== ROLES.SUB_ADMIN
-      );
-    }
+    // 2. USERS: The backend now sends ONLY manageable users.
+    // We just set the value directly.
+    users.value = userRes.data.data;
 
-    // Filter roles if necessary (optional, but good practice)
+    // 3. ROLES: Still filter out high-level roles so admins can't assign them
     roles.value = roleRes.data.data
       .filter(
         (role) =>
@@ -48,30 +38,29 @@ const fetchData = async () => {
       )
       .map((role) => ({
         ...role,
-        // Flatten permissions so .includes() works in the modal
         permissions: role.permissions.flat(),
       }));
 
-    // --- NEW LOGIC: Grouping & Filtering ---
+    // 4. PERMISSIONS: Grouping & Filtering
     const rawData = permRes.data.data;
     if (rawData) {
       const cleanData = {};
       for (const groupName in rawData) {
-        // 1. Skip ADMIN group (contains dangerous stuff)
+        // Skip ADMIN group (danger zone)
         if (groupName === "ADMIN" || groupName === "admin") continue;
 
-        // 2. Filter out Wildcard '*' from individual items
         const groupValues = Object.values(rawData[groupName]);
+
+        // Filter out the Super Admin wildcard
         cleanData[groupName] = groupValues.filter(
           (p) => p !== PERMISSION_GROUPS.ADMIN.SUPER_ADMIN
         );
       }
       permissionGroups.value = cleanData;
     }
-    // ---------------------------------------
   } catch (err) {
-    console.error(err);
-    showError("Failed to load data");
+    console.error("Fetch Error:", err);
+    showError("Failed to load management data");
   } finally {
     loading.value = false;
   }

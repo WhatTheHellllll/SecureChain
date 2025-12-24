@@ -1,12 +1,14 @@
 import jwt from "jsonwebtoken";
-import {User} from "../models/user.model.js";
+import { User } from "../models/user.model.js";
 
 // Check for token and reattach user to request
 const protect = async (req, res, next) => {
   let token;
 
   // Check if header exists and starts with "Bearer"
-  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
   ) {
     try {
       // Get token from header (Format: "Bearer <token>")
@@ -17,13 +19,13 @@ const protect = async (req, res, next) => {
 
       // Get user from the ID in the token
       // attach the user to the request object
-      req.user = await User.findById(payload.id);
+      req.user = await User.findById(payload.id).populate("role");
 
       if (!req.user) {
-         return res.status(401).json({ message: "User not found" });
+        return res.status(401).json({ message: "User not found" });
       }
 
-      next(); 
+      next();
     } catch (error) {
       console.error(error);
       res.status(401).json({ message: "Not authorized, token failed" });
@@ -45,12 +47,12 @@ const authorize = (...roles) => {
     // If your User model stores role as ObjectId, we might need to populate it here too.
     // FOR NOW, let's assume you populated it or check the ID.
     // (We will refine this when we test Role logic).
-    
+
     // Simple version if role was just a string:
     // if (!roles.includes(req.user.role)) { ... }
-    
+
     next();
   };
 };
 
-export { protect , authorize };
+export { protect, authorize };

@@ -1,12 +1,12 @@
-import { Product } from '../models/product.model.js';
-import ErrorResponse from '../utils/error.response.js';
+import { Product } from "../models/product.model.js";
+import ErrorResponse from "../utils/error.response.js";
 
 /**
  * Get all products (populated with updater info)
  */
 const getAllProducts = async () => {
   return await Product.find()
-    .populate('lastUpdatedBy', 'name email')
+    .populate("lastUpdatedBy", "name email")
     .sort({ createdAt: -1 });
 };
 
@@ -15,7 +15,7 @@ const getAllProducts = async () => {
  * @param {String} id
  */
 const getProductById = async (id) => {
-  const product = await Product.findById(id).populate('lastUpdatedBy', 'name');
+  const product = await Product.findById(id).populate("lastUpdatedBy", "name");
   if (!product) {
     throw new ErrorResponse(`Product not found with id of ${id}`, 404);
   }
@@ -54,7 +54,7 @@ const updateProductById = async (id, updateData, userId) => {
   const product = await Product.findByIdAndUpdate(id, payload, {
     new: true,
     runValidators: true,
-  }).populate('lastUpdatedBy', 'name');
+  }).populate("lastUpdatedBy", "name");
 
   if (!product) {
     throw new ErrorResponse(`Product not found with id of ${id}`, 404);
@@ -67,14 +67,12 @@ const updateProductById = async (id, updateData, userId) => {
  * Delete a product
  * @param {String} id
  */
-const deleteProductById = async (id) => {
-  const product = await Product.findByIdAndDelete(id);
-
-  if (!product) {
-    throw new ErrorResponse(`Product not found with id of ${id}`, 404);
-  }
-
-  return true;
+const softDeleteProduct = async (id) => {
+  return await Product.findByIdAndUpdate(
+    id,
+    { isActive: false },
+    { new: true }
+  );
 };
 
 export default {
@@ -82,5 +80,5 @@ export default {
   getProductById,
   createProduct,
   updateProductById,
-  deleteProductById,
+  softDeleteProduct,
 };

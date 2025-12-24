@@ -95,7 +95,7 @@ const updateProduct = async (req, res, next) => {
  */
 const deleteProduct = async (req, res, next) => {
   try {
-    await productService.deleteProductById(req.params.id);
+    await productService.softDeleteProduct(req.params.id);
 
     res.status(200).json({
       success: true,
