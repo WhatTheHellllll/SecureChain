@@ -95,11 +95,24 @@ const updateProduct = async (req, res, next) => {
  */
 const deleteProduct = async (req, res, next) => {
   try {
-    await productService.softDeleteProduct(req.params.id);
+    const productId = req.params.id;
 
+    const product = await productService.softDeleteProduct(
+      productId,
+      req.user._id,
+      req
+    );
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
     res.status(200).json({
       success: true,
-      message: "Product deleted",
+      message: "Product deactivated successfully",
+      data: product,
     });
   } catch (error) {
     next(error);

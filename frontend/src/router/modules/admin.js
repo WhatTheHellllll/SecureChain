@@ -23,4 +23,14 @@ export default [
       // permissions: ['role.read']
     },
   },
+  {
+    path: "/admin/audit-logs",
+    name: "AuditLogs",
+    component: () => import("@/views/admin/AuditLogView.vue"),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      layout: "admin",
+    },
+  },
 ];

@@ -30,6 +30,11 @@ const menuItems = computed(() => [
     path: "/admin/users",
     show: isSuperAdmin.value || isAdmin.value,
   },
+  {
+    label: "Activity Logs",
+    path: "/admin/audit-logs",
+    show: isSuperAdmin.value, // Usually only Super Admins see logs
+  },
 ]);
 </script>
 

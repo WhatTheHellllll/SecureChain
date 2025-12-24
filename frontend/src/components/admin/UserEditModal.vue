@@ -15,9 +15,17 @@ const localUser = ref({ ...props.user });
 watch(
   () => props.user,
   (newVal) => {
-    localUser.value = { ...newVal };
+    localUser.value = {
+      ...newVal,
+      customPermissions: newVal?.customPermissions
+        ? [...newVal.customPermissions]
+        : [],
+      deniedPermissions: newVal?.deniedPermissions
+        ? [...newVal.deniedPermissions]
+        : [],
+    };
   },
-  { deep: true }
+  { deep: true, immediate: true }
 );
 
 // --- HELPER LOGIC ---

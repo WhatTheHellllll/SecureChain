@@ -44,9 +44,7 @@ const fetchProducts = async () => {
 };
 
 const handleDelete = async (id) => {
-  const permissionRequired = PERMISSION_GROUPS.PRODUCT.DELETE;
-  const hasPermission = can(permissionRequired);
-
+  //#region
   // console.log("Role Permissions:", authStore.user.role?.permissions);
   // console.log("Custom Permissions:", authStore.user.customPermissions);
   // console.log("Checking against string:", PERMISSION_GROUPS.PRODUCT.DELETE);
@@ -54,7 +52,9 @@ const handleDelete = async (id) => {
   // console.log("Checking permission for:", permissionRequired);
   // console.log("User has permission?", hasPermission);
   // console.log("Full User Data:", authStore.user);
-
+  //#endregion
+  const permissionRequired = PERMISSION_GROUPS.PRODUCT.DELETE;
+  const hasPermission = can(permissionRequired);
   if (!hasPermission) {
     showError("Access Denied!");
     return; // This MUST stop the function
@@ -62,10 +62,13 @@ const handleDelete = async (id) => {
   if (await confirmDelete()) {
     try {
       await productService.delete(id);
+
+      // Remove it from the "Active" list in the UI
       products.value = products.value.filter((p) => p._id !== id);
-      showSuccess("Product deleted successfully!");
+
+      showSuccess("Product archived successfully!");
     } catch (error) {
-      showError("Server denied the request.");
+      showError("Failed to archive product.");
     }
   }
 };
@@ -135,7 +138,7 @@ onMounted(() => {
     <div class="mt-4 pt-2 border-t border-slate-700 flex gap-4">
       <span :class="can('product.update') ? 'text-green-400' : 'text-red-500'">
         Update: {{ can("product.update") ? "ALLOWED" : "DENIED" }}
-      </span> 
+      </span>
       <span :class="can('product.delete') ? 'text-green-400' : 'text-red-500'">
         Delete: {{ can("product.delete") ? "ALLOWED" : "DENIED" }}
       </span>

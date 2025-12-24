@@ -81,10 +81,15 @@ const updateUserRoleById = async (userId, updateData, adminUser) => {
 
   // 3. --- PROCEED WITH UPDATES (Only if checks passed) ---
   if (updateData.roleId) targetUser.role = updateData.roleId;
-  if (updateData.customPermissions)
-    targetUser.permissions = updateData.customPermissions;
-  if (updateData.deniedPermissions)
+
+  // Make sure this matches your User Schema field name!
+  if (updateData.customPermissions) {
+    targetUser.customPermissions = updateData.customPermissions;
+  }
+
+  if (updateData.deniedPermissions) {
     targetUser.deniedPermissions = updateData.deniedPermissions;
+  }
   if (updateData.name) targetUser.name = updateData.name;
 
   await targetUser.save();

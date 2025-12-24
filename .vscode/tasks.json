@@ -3,7 +3,7 @@
   "tasks": [
     {
       "label": "Launch Dev Environment",
-      "dependsOn": ["Backend", "Frontend", "General"],
+      "dependsOn": ["Frontend", "General"],
       "group": {
         "kind": "build",
         "isDefault": true
@@ -12,15 +12,6 @@
         "reveal": "always",
         "panel": "new"
       }
-    },
-    {
-      "label": "Backend",
-      "type": "shell",
-      "command": "npm run dev",
-      "options": {
-        "cwd": "${workspaceFolder}/backend"
-      },
-      "presentation": { "group": "dev-stack", "label": "BACKEND" }
     },
     {
       "label": "Frontend",

@@ -1,11 +1,11 @@
 import { Product } from "../models/product.model.js";
 import ErrorResponse from "../utils/error.response.js";
-
+import auditService from "./audit.service.js";
 /**
  * Get all products (populated with updater info)
  */
 const getAllProducts = async () => {
-  return await Product.find()
+  return await Product.find({ isActive: true })
     .populate("lastUpdatedBy", "name email")
     .sort({ createdAt: -1 });
 };
@@ -15,7 +15,10 @@ const getAllProducts = async () => {
  * @param {String} id
  */
 const getProductById = async (id) => {
-  const product = await Product.findById(id).populate("lastUpdatedBy", "name");
+  const product = await Product.findOne({ _id: id, isActive: true }).populate(
+    "lastUpdatedBy",
+    "name"
+  );
   if (!product) {
     throw new ErrorResponse(`Product not found with id of ${id}`, 404);
   }
@@ -67,12 +70,36 @@ const updateProductById = async (id, updateData, userId) => {
  * Delete a product
  * @param {String} id
  */
-const softDeleteProduct = async (id) => {
-  return await Product.findByIdAndUpdate(
-    id,
-    { isActive: false },
-    { new: true }
-  );
+const softDeleteProduct = async (id, userId, req) => {
+  const product = await Product.findById(id);
+
+  if (!product) {
+    throw new ErrorResponse("Product not found", 404);
+  }
+
+  // Capture old state for audit
+  const oldValue = {
+    isDeleted: product.isDeleted,
+    deletedAt: product.deletedAt,
+  };
+
+  product.isDeleted = true;
+  product.deletedAt = Date.now();
+  product.lastUpdatedBy = userId;
+  await product.save();
+
+  // RECORD THE AUDIT LOG
+  await auditService.log({
+    action: "DELETE",
+    entityType: "Product",
+    entityId: product._id,
+    performedBy: userId,
+    oldValue: oldValue,
+    newValue: { isDeleted: true, deletedAt: product.deletedAt },
+    req: req, // Pass request for IP/UserAgent
+  });
+
+  return product;
 };
 
 export default {
