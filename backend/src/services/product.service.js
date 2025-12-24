@@ -79,11 +79,11 @@ const softDeleteProduct = async (id, userId, req) => {
 
   // Capture old state for audit
   const oldValue = {
-    isDeleted: product.isDeleted,
+    isActive: product.isActive,
     deletedAt: product.deletedAt,
   };
 
-  product.isDeleted = true;
+  product.isActive = false;
   product.deletedAt = Date.now();
   product.lastUpdatedBy = userId;
   await product.save();
@@ -95,7 +95,7 @@ const softDeleteProduct = async (id, userId, req) => {
     entityId: product._id,
     performedBy: userId,
     oldValue: oldValue,
-    newValue: { isDeleted: true, deletedAt: product.deletedAt },
+    newValue: { isActive: false, deletedAt: product.deletedAt },
     req: req, // Pass request for IP/UserAgent
   });
 

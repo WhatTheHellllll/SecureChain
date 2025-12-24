@@ -13,7 +13,6 @@ const routes = [
   ...authRoutes,
   ...productRoutes,
   ...adminRoutes,
-
   {
     path: "/:pathMatch(.*)*",
     redirect: "/products/list",

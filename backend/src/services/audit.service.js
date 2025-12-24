@@ -40,7 +40,7 @@ const getEntityHistory = async (entityType = null, entityId = null) => {
   if (entityId) query.entityId = entityId;
 
   return await AuditLog.find(query)
-    .populate("performedBy", "name email")
+    .populate("performedBy", "name")
     .sort({ createdAt: -1 })
     .limit(100);
 };
