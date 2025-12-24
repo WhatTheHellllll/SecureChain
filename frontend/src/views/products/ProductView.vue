@@ -15,7 +15,7 @@ const products = ref([]);
 const loading = ref(true);
 const error = ref(null);
 const searchQuery = ref("");
-
+const { can, role, isSuperAdmin, allPermissions } = usePermission();
 const isAdminMode = computed(() => route.path.startsWith("/admin"));
 
 // Dynamically choose which route name to use
@@ -85,43 +85,54 @@ const filteredProducts = computed(() => {
 onMounted(() => {
   fetchProducts();
 });
-const { can } = usePermission();
-
-// // 👇 NEW: Create the combined list just for display
-// const allPermissions = computed(() => {
-//   const user = authStore.user;
-//   if (!user) return [];
-
-//   // 1. Get Role Permissions (and flatten nested arrays)
-//   const rolePerms = (user.role?.permissions || []).flat();
-
-//   // 2. Get Custom User Permissions
-//   const customPerms = (user.customPermissions || []).flat();
-
-//   // 3. Combine them and remove duplicates
-//   return [...new Set([...rolePerms, ...customPerms])];
-// });
 </script>
 
 <template>
-  <!-- <div class="bg-yellow-100 p-4 mb-4 border border-yellow-400 text-sm">
-    <p><strong>My Role:</strong> {{ authStore.user?.role?.name }}</p>
+  <div
+    class="bg-slate-900 text-green-400 p-6 rounded-lg font-mono text-xs shadow-xl border border-slate-700 my-4"
+  >
+    <h3 class="text-white font-bold mb-2 border-b border-slate-700 pb-1">
+      🔐 Auth & Permission Debugger
+    </h3>
 
-    <p class="mt-2">
-      <strong>All Effective Permissions:</strong><br />
-      <span class="text-xs font-mono bg-white px-1 rounded">
-        {{ allPermissions }}
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <p>
+          <span class="text-slate-500">User:</span> {{ authStore.user?.email }}
+        </p>
+        <p>
+          <span class="text-slate-500">Role:</span>
+          <span class="text-yellow-400">{{ role }}</span>
+        </p>
+        <p>
+          <span class="text-slate-500">Is Super?</span>
+          {{ isSuperAdmin ? "✅ Yes" : "❌ No" }}
+        </p>
+      </div>
+
+      <div>
+        <p class="text-white font-semibold">Permission Stack Logic:</p>
+        <p
+          class="text-red-400"
+          v-if="authStore.user?.deniedPermissions?.length"
+        >
+          🚫 Banned: {{ authStore.user.deniedPermissions }}
+        </p>
+        <p class="text-blue-400" v-if="allPermissions">
+          📜 Effective List: {{ [...allPermissions] }}
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-4 pt-2 border-t border-slate-700 flex gap-4">
+      <span :class="can('product.update') ? 'text-green-400' : 'text-red-500'">
+        Update: {{ can("product.update") ? "ALLOWED" : "DENIED" }}
       </span>
-    </p>
-
-    <p class="mt-2 text-red-600">
-      <strong>Banned:</strong> {{ authStore.user?.deniedPermissions }}
-    </p>
-
-    <p class="mt-2 font-bold text-blue-600">
-      Can Update? {{ can("product.update") }}
-    </p>
-  </div> -->
+      <span :class="can('product.delete') ? 'text-green-400' : 'text-red-500'">
+        Delete: {{ can("product.delete") ? "ALLOWED" : "DENIED" }}
+      </span>
+    </div>
+  </div>
   <div class="p-6">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold text-gray-800">Product Management</h2>

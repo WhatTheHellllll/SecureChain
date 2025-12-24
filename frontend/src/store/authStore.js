@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import authService from "../services/authService";
-
+import { ROLES } from "@backend/constants/roles.js";
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     // Initialize from storage so we don't lose login on refresh
@@ -15,13 +15,13 @@ export const useAuthStore = defineStore("auth", {
     // Update this to handle both populated objects and ID strings safely
     isAdmin: (state) => {
       const roleName = state.user?.role?.name || state.user?.role;
-      return ["super_admin", "sub_admin"].includes(roleName);
+      return [ROLES.SUPER_ADMIN, ROLES.SUB_ADMIN].includes(roleName);
     },
 
     // Useful for your UI logic
     isSuperAdmin: (state) => {
       const roleName = state.user?.role?.name || state.user?.role;
-      return roleName === "super_admin";
+      return roleName === ROLES.SUPER_ADMIN;
     },
     userRole: (state) => state.user?.role?.name || state.user?.role || "viewer",
   },

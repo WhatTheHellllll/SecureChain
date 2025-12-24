@@ -20,6 +20,8 @@ const PERMISSION_GROUPS = {
   ROLE: {
     READ: "role.read",
     MANAGE: "role.manage",
+    CREATE: "role.create",
+    UPDATE: "role.update",
   },
   ADMIN: {
     SUPER_ADMIN: "*",

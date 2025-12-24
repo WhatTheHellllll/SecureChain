@@ -1,0 +1,45 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Launch Dev Environment",
+      "dependsOn": ["Backend", "Frontend", "General"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Backend",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "presentation": { "group": "dev-stack", "label": "BACKEND" }
+    },
+    {
+      "label": "Frontend",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "presentation": { "group": "dev-stack", "label": "FRONTEND" }
+    },
+    {
+      "label": "General",
+      "type": "shell",
+      // This tells PowerShell: Clear the screen, then stay open (-NoExit)
+      "command": "powershell -NoExit -Command clear",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": { "group": "dev-stack", "label": "GENERAL" }
+    }
+  ]
+}

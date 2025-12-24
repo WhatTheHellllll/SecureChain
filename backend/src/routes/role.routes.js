@@ -15,16 +15,20 @@ const router = Router();
 
 router
   .route("/permissions")
-  .get(protect, checkPermission(PERMISSION_GROUPS.SUB_ADMIN), getPermissions);
+  .get(
+    protect,
+    checkPermission(PERMISSION_GROUPS.ADMIN.SUB_ADMIN),
+    getPermissions
+  );
 router
   .route("/list")
-  .get(protect, checkPermission(PERMISSION_GROUPS.SUB_ADMIN), getRoles);
+  .get(protect, checkPermission(PERMISSION_GROUPS.ROLE.READ), getRoles);
 router
   .route("/create")
   .post(
     protect,
     validate(roleSchema.createRoleSchema),
-    checkPermission(PERMISSION_GROUPS.SUB_ADMIN),
+    checkPermission(PERMISSION_GROUPS.ROLE.CREATE),
     createRole
   );
 router
@@ -32,11 +36,15 @@ router
   .put(
     protect,
     validate(roleSchema.updateRoleSchema),
-    checkPermission(PERMISSION_GROUPS.SUB_ADMIN),
+    checkPermission(PERMISSION_GROUPS.ROLE.UPDATE),
     updateRole
   );
 router
   .route("/delete/:id")
-  .delete(protect, checkPermission(PERMISSION_GROUPS.SUB_ADMIN), deleteRole);
+  .delete(
+    protect,
+    checkPermission(PERMISSION_GROUPS.ADMIN.SUPER_ADMIN),
+    deleteRole
+  );
 
 export default router;
