@@ -1,146 +1,170 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
-import { useRouter, useRoute } from "vue-router"; // useRoute gets the ID from URL
+import { useRouter, useRoute } from "vue-router";
 import productService from "../../services/productService.js";
 import { showError, showSuccess } from "../../utils/alert.js";
 import { usePermission } from "../../composables/usePermission.js";
 import { PERMISSION_GROUPS } from "@backend/constants/permissions.js";
+import ProductForm from "@/components/products/ProductForm.vue";
 
 const router = useRouter();
-const route = useRoute(); // Access URL params
+const route = useRoute();
 const { can } = usePermission();
-const form = ref({ name: "", sku: "", category: "", price: 0, quantity: 0 });
-const loading = ref(true);
-const saving = ref(false);
-const error = ref(null);
 
 const isAdminMode = computed(() => route.path.startsWith("/admin"));
-
 const productRouteName = computed(() =>
   isAdminMode.value ? "admin-products-list" : "public-products-list"
 );
 
-// 1. Load Data on Mount
+const productData = ref({});
+const loading = ref(true);
+const saving = ref(false);
+
+// Fetch Data on Mount
 onMounted(async () => {
   try {
     if (!can(PERMISSION_GROUPS.PRODUCT.UPDATE)) {
       showError("You do not have permission to edit products.");
-      router.push("/products"); // Kick them out
+      router.push({ name: productRouteName.value });
+      return;
     }
 
-    const productId = route.params.id; // Get ID from URL /products/edit/:id
-    const response = await productService.getProduct(productId);
-    form.value = response.data.data; // Fill the form
+    const res = await productService.getProduct(route.params.id);
+    productData.value = res.data.data;
   } catch (err) {
-    error.value = "Failed to load product details.";
-    console.error(err);
+    showError("Failed to load product.");
+    router.push({ name: productRouteName.value });
   } finally {
     loading.value = false;
   }
 });
 
-// 2. Handle Update
-const handleUpdate = async () => {
+// Simple Frontend Validation
+const validate = () => {
+  errors.value = {};
+  let isValid = true;
+
+  if (!form.value.name) {
+    errors.value.name = "Product name is required.";
+    isValid = false;
+  }
+  if (!form.value.sku) {
+    errors.value.sku = "SKU is required.";
+    isValid = false;
+  }
+  if (!form.value.category) {
+    errors.value.category = "Category is required.";
+    isValid = false;
+  }
+  if (!form.value.price || form.value.price <= 0) {
+    errors.value.price = "Price must be greater than 0.";
+    isValid = false;
+  }
+  if (form.value.quantity === "" || form.value.quantity < 0) {
+    errors.value.quantity = "Quantity cannot be negative.";
+    isValid = false;
+  }
+
+  return isValid;
+};
+
+// Handle Update
+const handleUpdate = async (formData) => {
   saving.value = true;
   try {
-    const productId = route.params.id;
-    await productService.update(productId, form.value);
-
-    await showSuccess("Product has been updated successfully.");
-
-    router.push({ name: productRouteName.value }); // Redirect to list
+    await productService.update(route.params.id, formData);
+    await showSuccess("Product updated!");
+    router.push({ name: productRouteName.value });
   } catch (err) {
-    const message = err.response?.data?.message || "Failed to create product.";
-
-    showError(message);
+    showError(err.response?.data?.message || "Update failed.");
   } finally {
     saving.value = false;
   }
 };
 </script>
-
 <template>
-  <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md mt-10">
-    <h2 class="text-2xl font-bold mb-6 text-gray-800">Edit Product</h2>
+  <div
+    class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg mt-10 border border-gray-100"
+  >
+    <div class="mb-8 border-b border-gray-100 pb-4">
+      <h2 class="text-2xl font-bold text-gray-800">Edit Product</h2>
+    </div>
 
-    <div v-if="loading" class="text-gray-500">Loading details...</div>
-    <div v-else-if="error" class="text-red-500">{{ error }}</div>
+    <div v-if="loading" class="text-center py-10 text-indigo-600">
+      Loading...
+    </div>
+
+    <ProductForm
+      v-else
+      :initial-data="productData"
+      :is-edit-mode="true"
+      :loading="saving"
+      @submit="handleUpdate"
+      @cancel="router.push({ name: productRouteName })"
+    />
+  </div>
+</template>
+<!-- <template>
+  <div
+    class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg mt-10 border border-gray-100"
+  >
+    <div class="mb-8 border-b border-gray-100 pb-4">
+      <h2 class="text-2xl font-bold text-gray-800">Edit Product</h2>
+      <p class="text-sm text-gray-500 mt-1">Update product details.</p>
+    </div>
+
+    <div v-if="loading" class="flex justify-center py-10">
+      <span class="text-indigo-600 animate-pulse font-medium"
+        >Loading product details...</span
+      >
+    </div>
 
     <form v-else @submit.prevent="handleUpdate" class="space-y-6">
-      <div>
-        <label class="block text-sm font-medium text-gray-700"
-          >Product Name</label
+      <BaseInput
+        v-model="form.name"
+        label="Product Name"
+        :error="errors.name"
+      />
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <BaseInput v-model="form.sku" label="SKU" :error="errors.sku" />
+        <BaseInput
+          v-model="form.category"
+          label="Category"
+          :error="errors.category"
+        />
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <BaseInput
+          v-model="form.price"
+          label="Price ($)"
+          type="number"
+          step="0.01"
+          :error="errors.price"
+        />
+        <BaseInput
+          v-model="form.quantity"
+          label="Quantity"
+          type="number"
+          :error="errors.quantity"
+        />
+      </div>
+
+      <div class="flex justify-end space-x-3 pt-6 border-t border-gray-100">
+        <BaseButton
+          type="button"
+          variant="secondary"
+          @click="router.push({ name: productRouteName })"
         >
-        <input v-model="form.name" type="text" required class="input-field" />
-      </div>
+          Cancel
+        </BaseButton>
 
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">SKU</label>
-          <input v-model="form.sku" type="text" required class="input-field" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700"
-            >Category</label
-          >
-          <input
-            v-model="form.category"
-            type="text"
-            required
-            class="input-field"
-          />
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700"
-            >Price ($)</label
-          >
-          <input
-            v-model="form.price"
-            type="number"
-            step="0.01"
-            required
-            class="input-field"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700"
-            >Quantity</label
-          >
-          <input
-            v-model="form.quantity"
-            type="number"
-            required
-            class="input-field"
-          />
-        </div>
-      </div>
-
-      <div class="flex justify-end space-x-3 pt-4">
-        <RouterLink :to="{ name: productRouteName }" class="btn-secondary"
-          >Cancel</RouterLink
-        >
-        <button type="submit" :disabled="saving" class="btn-primary">
-          {{ saving ? "Updating..." : "Update Product" }}
-        </button>
+        <BaseButton type="submit" variant="primary" :loading="saving">
+          <template #icon><Save class="w-4 h-4" /></template>
+          Save Changes
+        </BaseButton>
       </div>
     </form>
   </div>
-</template>
-
-<style scoped>
-/* Quick Utility Classes for clean code */
-.input-field {
-  @apply mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border;
-}
-
-.btn-primary {
-  @apply px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition;
-}
-
-.btn-secondary {
-  @apply px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition;
-}
-</style>
+</template> -->

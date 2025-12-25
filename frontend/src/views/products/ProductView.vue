@@ -142,15 +142,16 @@ onMounted(() => {
   <div class="p-6">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold text-gray-800">Product Management</h2>
-      <button
-        type="button"
+      <BaseButton
+        variant="primary"
         :disabled="!can(PERMISSION_GROUPS.PRODUCT.CREATE)"
         @click="goToCreate()"
-        class="flex items-center gap-2 p-2 rounded-lg transition text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 disabled:text-gray-400 disabled:bg-transparent disabled:cursor-not-allowed"
       >
-        <PlusCircle class="h-5 w-5" />
-        <span class="font-medium">Create Product</span>
-      </button>
+        <template #icon>
+          <PlusCircle class="h-5 w-5" />
+        </template>
+        Create Product
+      </BaseButton>
     </div>
 
     <div class="mb-4">
@@ -273,17 +274,17 @@ onMounted(() => {
                 </div>
               </td>
               <td
-                class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium space-x-3"
+                class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium"
               >
-                <div class="flex items-center justify-start space-x-2">
+                <div class="flex items-center justify-start gap-2">
                   <BaseButton
                     variant="icon"
                     :disabled="!can(PERMISSION_GROUPS.PRODUCT.UPDATE)"
                     @click="goToEdit(product._id)"
                     title="Edit Product"
-                    class="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50"
+                    class="hover:text-blue-600 hover:bg-blue-50"
                   >
-                    <Pencil class="h-4 w-4" />
+                    <template #icon><Pencil class="h-4 w-4" /></template>
                   </BaseButton>
 
                   <BaseButton
@@ -291,9 +292,9 @@ onMounted(() => {
                     :disabled="!can(PERMISSION_GROUPS.PRODUCT.DELETE)"
                     @click="handleDelete(product._id)"
                     title="Archive Product"
-                    class="text-red-600 hover:text-red-900 hover:bg-red-50"
+                    class="hover:text-red-600 hover:bg-red-50"
                   >
-                    <Trash2 class="h-4 w-4" />
+                    <template #icon><Trash2 class="h-4 w-4" /></template>
                   </BaseButton>
                 </div>
               </td>

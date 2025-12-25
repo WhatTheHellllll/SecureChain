@@ -6,9 +6,8 @@ import PermissionSelector from "../../components/admin/PermissionSelector.vue";
 import { ROLES } from "@backend/constants/roles.js";
 import { PERMISSION_GROUPS } from "@backend/constants/permissions.js";
 import { useCrud } from "../../composables/useCrud.js";
-
-// NEW: Import Icons
 import { Plus, Trash2, Save, Shield, ShieldAlert } from "lucide-vue-next";
+import BaseButton from "../../components/base/BaseButton.vue";
 
 // STATE
 const roles = ref([]);
@@ -201,28 +200,18 @@ const handleDelete = async () => {
       >
         <BaseButton
           v-if="isEditing"
-          variant="ghost"
+          variant="danger"
           @click="handleDelete"
           :loading="isPending"
-          class="text-red-600 hover:text-red-800 hover:bg-red-50"
         >
-          <template #icon>
-            <Trash2 class="w-4 h-4" />
-          </template>
+          <template #icon><Trash2 class="w-4 h-4" /></template>
           Delete Role
         </BaseButton>
 
         <div v-else></div>
 
-        <BaseButton
-          variant="primary"
-          @click="handleSave"
-          :loading="isPending"
-          class="shadow-sm"
-        >
-          <template #icon v-if="!isPending">
-            <Save class="w-4 h-4" />
-          </template>
+        <BaseButton variant="primary" @click="handleSave" :loading="isPending">
+          <template #icon><Save class="w-4 h-4" /></template>
           {{ isPending ? "Saving..." : "Save Changes" }}
         </BaseButton>
       </div>

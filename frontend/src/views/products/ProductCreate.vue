@@ -3,121 +3,137 @@ import { ref, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import productService from "../../services/productService.js";
 import { showError, showSuccess } from "../../utils/alert.js";
+import ProductForm from "@/components/products/ProductForm.vue";
 
 const router = useRouter();
 const route = useRoute();
+const loading = ref(false);
 
 const isAdminMode = computed(() => route.path.startsWith("/admin"));
-
 const productRouteName = computed(() =>
   isAdminMode.value ? "admin-products-list" : "public-products-list"
 );
-const form = ref({ name: "", sku: "", category: "", price: 0, quantity: 0 });
-const error = ref(null);
-const loading = ref(false);
 
-const handleSubmit = async () => {
+// const validate = () => {
+//   errors.value = {}; // Reset errors
+//   let isValid = true;
+
+//   if (!form.value.name) {
+//     errors.value.name = "Product name is required.";
+//     isValid = false;
+//   }
+//   if (!form.value.sku) {
+//     errors.value.sku = "SKU is required.";
+//     isValid = false;
+//   }
+//   if (!form.value.category) {
+//     errors.value.category = "Category is required.";
+//     isValid = false;
+//   }
+//   if (!form.value.price || form.value.price <= 0) {
+//     errors.value.price = "Price must be greater than 0.";
+//     isValid = false;
+//   }
+//   if (form.value.quantity === "" || form.value.quantity < 0) {
+//     errors.value.quantity = "Quantity cannot be negative.";
+//     isValid = false;
+//   }
+
+//   return isValid;
+// };
+
+const handleSubmit = async (formData) => {
   loading.value = true;
   try {
-    await productService.create(form.value);
-
-    await showSuccess("Product has been created successfully.");
-
+    await productService.create(formData);
+    await showSuccess("Product created successfully.");
     router.push({ name: productRouteName.value });
   } catch (err) {
-    console.error(err);
-    const message = err.response?.data?.message || "Failed to create product.";
-
-    showError(message);
+    showError(err.response?.data?.message || "Failed to create product.");
   } finally {
     loading.value = false;
   }
 };
 </script>
-
 <template>
-  <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md mt-10">
-    <h2 class="text-2xl font-bold mb-6 text-gray-800">Add New Product</h2>
+  <div
+    class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg mt-10 border border-gray-100"
+  >
+    <div class="mb-8 border-b border-gray-100 pb-4">
+      <h2 class="text-2xl font-bold text-gray-800">Add New Product</h2>
+    </div>
+
+    <ProductForm
+      @submit="handleSubmit"
+      @cancel="router.push({ name: productRouteName })"
+      :loading="loading"
+    />
+  </div>
+</template>
+<!-- <template>
+  <div
+    class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg mt-10 border border-gray-100"
+  >
+    <div class="mb-8 border-b border-gray-100 pb-4">
+      <h2 class="text-2xl font-bold text-gray-800">Add New Product</h2>
+      <p class="text-sm text-gray-500 mt-1">
+        Enter the details to create a new inventory item.
+      </p>
+    </div>
+
     <form @submit.prevent="handleSubmit" class="space-y-6">
-      <div>
-        <label class="block text-sm font-medium text-gray-700"
-          >Product Name</label
-        >
-        <input
-          v-model="form.name"
-          type="text"
-          required
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-          placeholder="e.g. Wireless Mouse"
+      <BaseInput
+        v-model="form.name"
+        label="Product Name"
+        placeholder="e.g. Wireless Mouse"
+        :error="errors.name"
+      />
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <BaseInput
+          v-model="form.sku"
+          label="SKU"
+          placeholder="e.g. WM-001"
+          :error="errors.sku"
+        />
+        <BaseInput
+          v-model="form.category"
+          label="Category"
+          placeholder="e.g. Electronics"
+          :error="errors.category"
         />
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">SKU</label>
-          <input
-            v-model="form.sku"
-            type="text"
-            required
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-            placeholder="e.g. WM-001"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700"
-            >Category</label
-          >
-          <input
-            v-model="form.category"
-            type="text"
-            required
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-            placeholder="e.g. Electronics"
-          />
-        </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <BaseInput
+          v-model="form.price"
+          label="Price ($)"
+          type="number"
+          step="0.01"
+          :error="errors.price"
+        />
+        <BaseInput
+          v-model="form.quantity"
+          label="Quantity"
+          type="number"
+          :error="errors.quantity"
+        />
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700"
-            >Price ($)</label
-          >
-          <input
-            v-model="form.price"
-            type="number"
-            step="0.01"
-            required
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700"
-            >Quantity</label
-          >
-          <input
-            v-model="form.quantity"
-            type="number"
-            required
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
-          />
-        </div>
-      </div>
-
-      <div class="flex justify-end space-x-3 pt-4">
-        <RouterLink
-          :to="{ name: productRouteName }"
-          class="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+      <div class="flex justify-end space-x-3 pt-6 border-t border-gray-100">
+        <BaseButton
+          type="button"
+          variant="secondary"
+          @click="router.push({ name: productRouteName })"
         >
           Cancel
-        </RouterLink>
-        <button
-          type="submit"
-          :disabled="loading"
-          class="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-300"
-        >
-          {{ loading ? "Saving..." : "Save Product" }}
-        </button>
+        </BaseButton>
+
+        <BaseButton type="submit" variant="primary" :loading="loading">
+          <template #icon><Save class="w-4 h-4" /></template>
+          Create Product
+        </BaseButton>
       </div>
     </form>
   </div>
-</template>
+</template> -->

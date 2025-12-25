@@ -21,7 +21,7 @@ const baseClass =
 // VARIANTS: Standardized colors
 const variants = {
   primary:
-    "bg-slate-800 text-white hover:bg-slate-900 focus:ring-slate-800 shadow-sm",
+    "bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500 shadow-sm",
   secondary:
     "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-200 shadow-sm",
   danger:

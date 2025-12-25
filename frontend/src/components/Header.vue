@@ -1,63 +1,76 @@
 <script setup>
-import { RouterLink, useRouter } from "vue-router";
 import { computed } from "vue";
-import { ROLES } from "@backend/constants/roles";
+import { RouterLink, useRouter } from "vue-router";
 import { useAuthStore } from "@/store/authStore";
+import { ROLES } from "@backend/constants/roles";
+import BaseButton from "../components/base/BaseButton.vue";
+import {
+  LogOut,
+  Users,
+  Shield,
+  Package,
+  LayoutDashboard,
+} from "lucide-vue-next";
+
 const router = useRouter();
-
 const authStore = useAuthStore();
-
 const currentUser = computed(() => authStore.user);
 
 const handleLogout = () => {
-  // 1. Delete the keys
   authStore.logout();
-  // 2. Go to login
   router.push("/login");
 };
 </script>
 
 <template>
-  <nav class="bg-slate-800 text-white p-4 shadow-md">
-    <div class="container mx-auto flex justify-between items-center">
+  <nav class="bg-indigo-950 text-white shadow-lg z-50 relative">
+    <div class="container mx-auto px-4 h-16 flex justify-between items-center">
       <RouterLink
         to="/products/list"
-        class="text-xl font-bold flex items-center gap-2"
+        class="text-xl font-bold flex items-center gap-2 hover:text-indigo-200 transition-colors"
       >
-        SecureChain
+        <div class="p-1.5 bg-indigo-600 rounded-lg">
+          <Package class="w-5 h-5 text-white" />
+        </div>
+        <span>SecureChain</span>
       </RouterLink>
 
-      <div class="flex items-center space-x-6">
-        <div class="h-6 w-px bg-slate-600"></div>
-
-        <router-link
+      <div class="flex items-center space-x-2 md:space-x-4">
+        <template
           v-if="
             currentUser?.role === ROLES.SUPER_ADMIN ||
             currentUser?.role === ROLES.SUB_ADMIN
           "
-          to="/admin/users"
-          class="text-sm font-bold flex items-center gap-2 hover:text-blue-400 transition"
         >
-          Manage Users
-        </router-link>
+          <router-link
+            to="/admin/users"
+            class="hidden md:flex items-center gap-2 text-sm font-medium text-indigo-200 hover:text-white transition-colors px-3 py-2 rounded-md hover:bg-indigo-900"
+          >
+            <Users class="w-4 h-4" />
+            <span>Manage Users</span>
+          </router-link>
 
-        <router-link
-          v-if="
-            currentUser?.role === ROLES.SUPER_ADMIN ||
-            currentUser?.role === ROLES.SUB_ADMIN
-          "
-          to="/admin/roles"
-          class="text-sm font-bold flex items-center gap-2 hover:text-blue-400 transition"
-        >
-          Manage Roles
-        </router-link>
+          <router-link
+            to="/admin/roles"
+            class="hidden md:flex items-center gap-2 text-sm font-medium text-indigo-200 hover:text-white transition-colors px-3 py-2 rounded-md hover:bg-indigo-900"
+          >
+            <Shield class="w-4 h-4" />
+            <span>Manage Roles</span>
+          </router-link>
 
-        <button
+          <div class="h-6 w-px bg-indigo-800 mx-2 hidden md:block"></div>
+        </template>
+
+        <BaseButton
+          variant="ghost"
           @click="handleLogout"
-          class="text-sm bg-transparent border border-transparent hover:bg-slate-700 px-3 py-1 rounded transition"
+          class="text-indigo-100 hover:text-white hover:bg-indigo-900 border border-indigo-900/50"
         >
+          <template #icon>
+            <LogOut class="w-4 h-4" />
+          </template>
           Logout
-        </button>
+        </BaseButton>
       </div>
     </div>
   </nav>
