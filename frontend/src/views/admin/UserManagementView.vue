@@ -2,78 +2,58 @@
 import { ref, onMounted } from "vue";
 import adminService from "../../services/adminService.js";
 import roleService from "../../services/roleService.js";
-import { showError } from "../../utils/alert.js";
 import UserEditModal from "../../components/admin/UserEditModal.vue";
 import { PERMISSION_GROUPS } from "@backend/constants/permissions.js";
 import { ROLES } from "@backend/constants/roles.js";
+import { useCrud } from "../../composables/useCrud.js";
+import { Pencil, Trash2, RefreshCw } from "lucide-vue-next";
+import BaseButton from "../../components/base/BaseButton.vue";
 
 const users = ref([]);
 const roles = ref([]);
-// CHANGE: Store as an Object (Groups), not a flat Array
 const permissionGroups = ref({});
 const showModal = ref(false);
-const loading = ref(false);
-const saving = ref(false);
 const selectedUser = ref(null);
+const { isPending, executeAction, confirmAndRemove } = useCrud();
 
 const fetchData = async () => {
-  loading.value = true;
-  try {
-    // 1. Fetch all data in parallel
+  // Use executeAction even for fetching to handle the loading state automatically via isPending
+  await executeAction(async () => {
     const [userRes, roleRes, permRes] = await Promise.all([
       adminService.getAllUsers(),
       roleService.getRoles(),
       roleService.getPermissions(),
     ]);
 
-    // 2. USERS: The backend now sends ONLY manageable users.
-    // We just set the value directly.
     users.value = userRes.data.data;
 
-    // 3. ROLES: Still filter out high-level roles so admins can't assign them
     roles.value = roleRes.data.data
-      .filter(
-        (role) =>
-          role.name !== ROLES.SUPER_ADMIN && role.name !== ROLES.SUB_ADMIN
-      )
-      .map((role) => ({
-        ...role,
-        permissions: role.permissions.flat(),
-      }));
+      .filter((r) => r.name !== ROLES.SUPER_ADMIN && r.name !== ROLES.SUB_ADMIN)
+      .map((r) => ({ ...r, permissions: r.permissions.flat() }));
 
-    // 4. PERMISSIONS: Grouping & Filtering
     const rawData = permRes.data.data;
     if (rawData) {
       const cleanData = {};
       for (const groupName in rawData) {
-        // Skip ADMIN group (danger zone)
         if (groupName === "ADMIN" || groupName === "admin") continue;
-
         const groupValues = Object.values(rawData[groupName]);
-
-        // Filter out the Super Admin wildcard
         cleanData[groupName] = groupValues.filter(
           (p) => p !== PERMISSION_GROUPS.ADMIN.SUPER_ADMIN
         );
       }
       permissionGroups.value = cleanData;
     }
-  } catch (err) {
-    console.error("Fetch Error:", err);
-    showError("Failed to load management data");
-  } finally {
-    loading.value = false;
-  }
+  }, ""); // Empty string because we don't need a "Success" popup for just loading data
 };
-
 onMounted(fetchData);
 
 const openEdit = (user) => {
   selectedUser.value = {
     _id: user._id,
-    // Handle populated role object or direct ID
+    name: user.name,
+    email: user.email,
     role: user.role?._id || user.role,
-    roleName: user.role?.name, // Pass name to check for super_admin
+    roleName: user.role?.name,
     customPermissions: [...(user.customPermissions || [])],
     deniedPermissions: [...(user.deniedPermissions || [])],
   };
@@ -81,19 +61,29 @@ const openEdit = (user) => {
 };
 
 const handleSave = async (updatedUserData) => {
-  saving.value = true;
-  try {
-    await adminService.updateUser(updatedUserData._id, {
+  const apiCall = () =>
+    adminService.updateUser(updatedUserData._id, {
       roleId: updatedUserData.role,
       customPermissions: updatedUserData.customPermissions,
       deniedPermissions: updatedUserData.deniedPermissions,
     });
+
+  const result = await executeAction(apiCall, "User updated successfully");
+
+  if (result.success) {
     showModal.value = false;
     await fetchData();
-  } catch (err) {
-    showError(err.response?.data?.message || "Failed to update user");
-  } finally {
-    saving.value = false;
+  }
+};
+
+const handleDelete = async (user) => {
+  const result = await confirmAndRemove(
+    () => adminService.deleteUser(user._id),
+    user.name
+  );
+
+  if (result.success) {
+    await fetchData();
   }
 };
 </script>
@@ -102,12 +92,17 @@ const handleSave = async (updatedUserData) => {
   <div class="p-6">
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold text-gray-800">User Management</h1>
-      <button @click="fetchData" class="text-blue-600 hover:underline text-sm">
-        Refresh Data
+      <button
+        @click="fetchData"
+        :disabled="isPending"
+        class="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition disabled:opacity-50"
+      >
+        <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': isPending }" />
+        <span class="text-sm font-medium">Refresh</span>
       </button>
     </div>
 
-    <div v-if="loading" class="text-center py-10 text-gray-500">
+    <div v-if="isPending" class="text-center py-10 text-gray-500">
       Loading users...
     </div>
 
@@ -164,12 +159,27 @@ const handleSave = async (updatedUserData) => {
               </span>
             </td>
             <td class="p-4 text-right">
-              <button
-                @click="openEdit(user)"
-                class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1 rounded text-sm font-medium transition"
-              >
-                Edit
-              </button>
+              <div class="flex items-center justify-end gap-2">
+                <BaseButton
+                  variant="icon"
+                  @click="openEdit(user)"
+                  :disabled="isPending"
+                  title="Edit User"
+                  class="text-gray-500 hover:bg-blue-50 hover:text-blue-600"
+                >
+                  <Pencil class="w-4 h-4" />
+                </BaseButton>
+
+                <BaseButton
+                  variant="icon"
+                  @click="handleDelete(user)"
+                  :disabled="isPending"
+                  title="Deactivate User"
+                  class="text-gray-500 hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 class="w-4 h-4" />
+                </BaseButton>
+              </div>
             </td>
           </tr>
         </tbody>

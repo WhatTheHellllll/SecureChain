@@ -14,4 +14,7 @@ export default {
   getEntityHistory(type, id) {
     return api.get(`/audit/audit-logs/${type}/${id}`);
   },
+  deleteUser(id) {
+    return api.delete(`/users/delete/${id}`);
+  },
 };

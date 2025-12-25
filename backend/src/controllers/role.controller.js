@@ -1,9 +1,12 @@
-import roleService from '../services/role.service.js';
+import roleService from "../services/role.service.js";
 
 /**
  * @desc    Get system configuration (list of all available permissions)
  * @route   GET /api/v1/roles/permissions
  * @access  Private (Admin)
+ * @param   {import("express").Request} req
+ * @param   {import("express").Response} res
+ * @param   {import("express").NextFunction} next
  */
 const getPermissions = (req, res, next) => {
   try {
@@ -21,6 +24,9 @@ const getPermissions = (req, res, next) => {
  * @desc    Get all roles
  * @route   GET /api/v1/roles
  * @access  Private (Admin)
+ * @param   {import("express").Request} req
+ * @param   {import("express").Response} res
+ * @param   {import("express").NextFunction} next
  */
 const getRoles = async (req, res, next) => {
   try {
@@ -40,8 +46,9 @@ const getRoles = async (req, res, next) => {
  * @desc    Create a new role
  * @route   POST /api/v1/roles
  * @access  Private (Admin)
- * @param   {string} req.body.name - Name of the role (e.g., "Manager")
- * @param   {string[]} req.body.permissions - Array of permission strings
+ * @param   {import("express").Request} req
+ * @param   {import("express").Response} res
+ * @param   {import("express").NextFunction} next
  */
 const createRole = async (req, res, next) => {
   try {
@@ -50,7 +57,7 @@ const createRole = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: 'Role created',
+      message: "Role created",
       data: role,
     });
   } catch (error) {
@@ -62,8 +69,9 @@ const createRole = async (req, res, next) => {
  * @desc    Update permissions or details for a role
  * @route   PUT /api/v1/roles/:id
  * @access  Private (Admin)
- * @param   {string} req.params.id - The Role ID
- * @param   {Object} req.body - Fields to update (name, permissions, etc.)
+ * @param   {import("express").Request} req
+ * @param   {import("express").Response} res
+ * @param   {import("express").NextFunction} next
  */
 const updateRole = async (req, res, next) => {
   try {
@@ -71,7 +79,7 @@ const updateRole = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Role updated',
+      message: "Role updated",
       data: role,
     });
   } catch (error) {
@@ -80,18 +88,27 @@ const updateRole = async (req, res, next) => {
 };
 
 /**
- * @desc    Delete a role
+ * @desc    Delete a role (Soft Delete)
  * @route   DELETE /api/v1/roles/:id
  * @access  Private (Admin)
- * @param   {string} req.params.id - The Role ID
+ * @param   {import("express").Request} req
+ * @param   {import("express").Response} res
+ * @param   {import("express").NextFunction} next
  */
 const deleteRole = async (req, res, next) => {
   try {
-    await roleService.deleteRoleById(req.params.id);
+    const { id } = req.params;
+
+    // You MUST pass 3 arguments to match the new service signature
+    await roleService.softDeleteRole(
+      id, // Role ID
+      req.user._id,
+      req // The Request object for the Audit Log
+    );
 
     res.status(200).json({
       success: true,
-      message: 'Role deleted',
+      message: "Role deleted",
     });
   } catch (error) {
     next(error);

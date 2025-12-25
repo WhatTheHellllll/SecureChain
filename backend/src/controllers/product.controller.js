@@ -3,7 +3,10 @@ import productService from "../services/product.service.js";
 /**
  * @desc    Get all products
  * @route   GET /api/v1/products
- * @access  Public (or Private, depending on your app)
+ * @access  Public
+ * @param   {import("express").Request} req
+ * @param   {import("express").Response} res
+ * @param   {import("express").NextFunction} next
  */
 const getProducts = async (req, res, next) => {
   try {
@@ -23,7 +26,9 @@ const getProducts = async (req, res, next) => {
  * @desc    Get single product
  * @route   GET /api/v1/products/:id
  * @access  Public
- * @param   {string} req.params.id - The Object ID of the product
+ * @param   {import("express").Request} req
+ * @param   {import("express").Response} res
+ * @param   {import("express").NextFunction} next
  */
 const getProduct = async (req, res, next) => {
   try {
@@ -42,16 +47,18 @@ const getProduct = async (req, res, next) => {
  * @desc    Create new product
  * @route   POST /api/v1/products
  * @access  Private (Admin/Manager)
- * @param   {string} req.body.name - Name of product
- * @param   {string} req.body.sku - Stock Keeping Unit code
- * @param   {number} req.body.price - Price of product
- * @param   {number} req.body.quantity - Inventory count
- * @param   {string} req.body.category - Category string
+ * @param   {import("express").Request} req
+ * @param   {import("express").Response} res
+ * @param   {import("express").NextFunction} next
  */
 const createProduct = async (req, res, next) => {
   try {
-    // Service handles creation. We pass req.user._id to track who made it.
-    const product = await productService.createProduct(req.body, req.user._id);
+    // FIX: Pass 'req' as the 3rd argument for Audit Logging
+    const product = await productService.createProduct(
+      req.body,
+      req.user._id,
+      req
+    );
 
     res.status(201).json({
       success: true,
@@ -67,15 +74,18 @@ const createProduct = async (req, res, next) => {
  * @desc    Update product
  * @route   PUT /api/v1/products/:id
  * @access  Private (Admin/Manager)
- * @param   {string} [req.body.name] - Updated name
- * @param   {number} [req.body.price] - Updated price
+ * @param   {import("express").Request} req
+ * @param   {import("express").Response} res
+ * @param   {import("express").NextFunction} next
  */
 const updateProduct = async (req, res, next) => {
   try {
+    // FIX: Pass 'req' as the 4th argument for Audit Logging
     const product = await productService.updateProductById(
       req.params.id,
       req.body,
-      req.user._id // Track who updated it
+      req.user._id, // Track who updated it
+      req // Audit Log needs this
     );
 
     res.status(200).json({
@@ -89,14 +99,18 @@ const updateProduct = async (req, res, next) => {
 };
 
 /**
- * @desc    Delete product
+ * @desc    Delete product (Soft Delete)
  * @route   DELETE /api/v1/products/:id
  * @access  Private (Admin)
+ * @param   {import("express").Request} req
+ * @param   {import("express").Response} res
+ * @param   {import("express").NextFunction} next
  */
 const deleteProduct = async (req, res, next) => {
   try {
     const productId = req.params.id;
 
+    // This one was already correct!
     const product = await productService.softDeleteProduct(
       productId,
       req.user._id,

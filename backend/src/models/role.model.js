@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 import { VALID_PERMISSIONS } from "../constants/permissions.js";
 
 const roleSchema = new mongoose.Schema(
@@ -12,15 +12,18 @@ const roleSchema = new mongoose.Schema(
     },
     description: { type: String },
     // The master list of what this role allows
-    permissions: [{
-        type: [String], 
+    permissions: [
+      {
+        type: [String],
         enum: VALID_PERMISSIONS, // Only allow valid strings from our dictionary
         default: [],
-        trim: true
-    }]
+        trim: true,
+      },
+    ],
+    isActive: { type: Boolean, default: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
 
-
-export const Role = mongoose.model('Role', roleSchema);
+export const Role = mongoose.model("Role", roleSchema);

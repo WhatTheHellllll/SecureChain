@@ -110,7 +110,12 @@ const handleSave = () => {
           &times;
         </button>
       </div>
-
+      <div class="p-3 bg-gray-50 rounded-md border border-gray-200">
+        <p class="text-sm font-semibold text-gray-800">
+          Editing User: <span class="text-blue-600">{{ user?.name }}</span>
+        </p>
+        <p class="text-xs text-gray-500">Email: {{ user?.email }}</p>
+      </div>
       <div class="p-6 overflow-y-auto flex-grow custom-scrollbar">
         <div class="mb-8">
           <label class="block text-sm font-bold text-gray-700 mb-2"
@@ -134,6 +139,7 @@ const handleSave = () => {
             <span class="font-normal text-gray-500"
               >(Click to cycle: Default -> Allow -> Ban)</span
             >
+            <h2>localUser.user</h2>
           </label>
 
           <div

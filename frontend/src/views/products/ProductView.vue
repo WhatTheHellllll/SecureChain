@@ -1,25 +1,20 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import productService from "../../services/productService.js";
-import { RouterLink, useRoute, useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { confirmDelete, showSuccess } from "../../utils/alert.js";
-import {
-  PencilSquareIcon,
-  TrashIcon,
-  PlusCircleIcon,
-} from "@heroicons/vue/24/solid";
+import { Pencil, Trash2, PlusCircle, Search } from "lucide-vue-next";
 import { usePermission } from "../../composables/usePermission.js";
-import { useAuthStore } from "../../store/authStore.js";
 import { PERMISSION_GROUPS } from "@backend/constants/permissions.js";
+import BaseButton from "../../components/base/BaseButton.vue";
 
 const router = useRouter();
 const route = useRoute();
-const authStore = useAuthStore();
 const products = ref([]);
 const loading = ref(true);
 const error = ref(null);
 const searchQuery = ref("");
-const { can, role, isSuperAdmin, allPermissions } = usePermission();
+const { can } = usePermission();
 const isAdminMode = computed(() => route.path.startsWith("/admin"));
 
 // Dynamically choose which route name to use
@@ -98,7 +93,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div
+  <!-- <div
     class="bg-slate-900 text-green-400 p-6 rounded-lg font-mono text-xs shadow-xl border border-slate-700 my-4"
   >
     <h3 class="text-white font-bold mb-2 border-b border-slate-700 pb-1">
@@ -143,7 +138,7 @@ onMounted(() => {
         Delete: {{ can("product.delete") ? "ALLOWED" : "DENIED" }}
       </span>
     </div>
-  </div>
+  </div> -->
   <div class="p-6">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold text-gray-800">Product Management</h2>
@@ -153,7 +148,7 @@ onMounted(() => {
         @click="goToCreate()"
         class="flex items-center gap-2 p-2 rounded-lg transition text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 disabled:text-gray-400 disabled:bg-transparent disabled:cursor-not-allowed"
       >
-        <PlusCircleIcon class="h-5 w-5" />
+        <PlusCircle class="h-5 w-5" />
         <span class="font-medium">Create Product</span>
       </button>
     </div>
@@ -161,9 +156,9 @@ onMounted(() => {
     <div class="mb-4">
       <div class="relative">
         <span
-          class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500"
+          class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"
         >
-          🔍
+          <Search class="w-5 h-5" />
         </span>
         <input
           v-model="searchQuery"
@@ -281,23 +276,25 @@ onMounted(() => {
                 class="px-6 py-4 whitespace-nowrap text-left text-sm font-medium space-x-3"
               >
                 <div class="flex items-center justify-start space-x-2">
-                  <button
-                    type="button"
+                  <BaseButton
+                    variant="icon"
                     :disabled="!can(PERMISSION_GROUPS.PRODUCT.UPDATE)"
                     @click="goToEdit(product._id)"
-                    class="p-1 rounded-full transition text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 disabled:text-gray-400 disabled:bg-transparent disabled:cursor-not-allowed"
+                    title="Edit Product"
+                    class="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50"
                   >
-                    <PencilSquareIcon class="h-5 w-5" />
-                  </button>
+                    <Pencil class="h-4 w-4" />
+                  </BaseButton>
 
-                  <button
-                    type="button"
+                  <BaseButton
+                    variant="icon"
                     :disabled="!can(PERMISSION_GROUPS.PRODUCT.DELETE)"
                     @click="handleDelete(product._id)"
-                    class="p-1 rounded-full transition text-red-600 hover:text-red-900 hover:bg-red-50 disabled:text-gray-400 disabled:bg-transparent disabled:cursor-not-allowed"
+                    title="Archive Product"
+                    class="text-red-600 hover:text-red-900 hover:bg-red-50"
                   >
-                    <TrashIcon class="h-5 w-5" />
-                  </button>
+                    <Trash2 class="h-4 w-4" />
+                  </BaseButton>
                 </div>
               </td>
             </tr>

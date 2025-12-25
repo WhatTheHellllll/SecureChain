@@ -2,7 +2,7 @@ export default [
   {
     path: "/admin/roles/",
     name: "admin-roles",
-    component: () => import("@/views/admin/RoleView.vue"),
+    component: () => import("@/views/admin/RoleManagementView.vue"),
     meta: {
       requiresAuth: true,
       requiresAdmin: true,

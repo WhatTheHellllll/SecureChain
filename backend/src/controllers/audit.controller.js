@@ -1,8 +1,12 @@
-import auditService from '../services/audit.service.js';
+import auditService from "../services/audit.service.js";
 
 /**
  * @desc    Get all system audit logs
  * @route   GET /api/v1/admin/audit-logs
+ * @access  Private (Admin)
+ * @param   {import("express").Request} req
+ * @param   {import("express").Response} res
+ * @param   {import("express").NextFunction} next
  */
 const getAuditLogs = async (req, res, next) => {
   try {
@@ -17,6 +21,10 @@ const getAuditLogs = async (req, res, next) => {
 /**
  * @desc    Get history for a specific entity (e.g., specific Product)
  * @route   GET /api/v1/admin/audit-logs/:type/:id
+ * @access  Private (Admin)
+ * @param   {import("express").Request} req
+ * @param   {import("express").Response} res
+ * @param   {import("express").NextFunction} next
  */
 const getSpecificEntityHistory = async (req, res, next) => {
   try {

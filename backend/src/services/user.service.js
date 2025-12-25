@@ -1,11 +1,12 @@
 import { User } from "../models/user.model.js";
 import ErrorResponse from "../utils/error.response.js";
 import { ROLES } from "../constants/roles.js";
+import { Role } from "../models/role.model.js";
 /**
  * Get all users with their role details
  */
 const getAllUsers = async (currentUser) => {
-  let query = {};
+  let query = { isActive: { $ne: false } };
   const roleName = currentUser.role?.name || "";
   if (roleName === ROLES.SUPER_ADMIN) {
     query = { _id: { $ne: currentUser._id } };
@@ -21,8 +22,7 @@ const getAllUsers = async (currentUser) => {
   // and we can filter the final array if the ID query is too complex
   const users = await User.find(query).populate("role");
 
-  // If the MongoDB query above is tricky with nested role names,
-  // you can filter the final array here:
+  //filter the final array:
   if (roleName === ROLES.SUB_ADMIN) {
     return users.filter(
       (u) =>
@@ -34,43 +34,86 @@ const getAllUsers = async (currentUser) => {
 };
 
 /**
- * Update user details (Role, Permissions, or Profile info)
- * @param {String} userId
- * @param {Object} updateData
+ * Deactivates a user account (Soft Delete)
+ * @param {string} id - The target user's ID
+ * @param {string} adminId - The ID of the admin performing the action
+ * @param {Object} req - Express Request object
+ * @returns {Promise<Object>} The deactivated user document
  */
-const updateUserRoleById = async (userId, updateData, adminUser) => {
-  // 1. Find the user we want to edit
+const softDeleteUser = async (id, adminId, req) => {
+  const user = await User.findById(id);
+  if (!user) throw new ErrorResponse("User not found", 404);
+
+  // Capture old state for audit
+  const oldValue = {
+    isActive: user.isActive ?? true,
+    deletedAt: user.deletedAt || null,
+  };
+
+  // Turn off the user
+  user.isActive = false;
+  user.deletedAt = Date.now();
+  await user.save();
+
+  // Audit Log
+  await auditService.log({
+    action: "DELETE",
+    entityType: "User",
+    entityId: user._id,
+    performedBy: adminId,
+    req: req,
+    oldValue: oldValue,
+    newValue: { isActive: false, deletedAt: user.deletedAt },
+  });
+
+  return user;
+};
+
+/**
+ * Updates a user's role or permissions with security hierarchy checks
+ * @param {string} userId - The target user's ID to be updated
+ * @param {Object} updateData - { roleId, customPermissions, deniedPermissions }
+ * @param {Object} adminUser - The full User object of the admin performing the action (req.user)
+ * @param {Object} req - Express Request object for Audit Log
+ * @returns {Promise<Object>} The updated user document
+ * @throws {ErrorResponse} 403 if trying to edit a higher-ranking admin
+ */
+const updateUserRoleById = async (userId, updateData, adminUser, req) => {
   const targetUser = await User.findById(userId).populate("role");
   if (!targetUser) {
     throw new ErrorResponse("User not found", 404);
   }
 
-  // 2. --- HIERARCHY SECURITY CHECKS ---
+  // 1. Capture snapshot BEFORE update
+  // We use the fallback pattern here as well for safety
+  const oldValue = {
+    ...targetUser.toObject(),
+    isActive: targetUser.isActive ?? true,
+  };
 
-  // If the person logged in is NOT a Super Admin, apply restrictions
-  if (adminUser.role?.name !== ROLES.SUPER_ADMIN) {
-    // Check A: Is the person being edited a Super Admin?
-    if (targetUser.role?.name === ROLES.SUPER_ADMIN) {
+  // 2. --- HIERARCHY SECURITY CHECKS ---
+  const adminRoleName = adminUser.role?.name || "";
+  const targetRoleName = targetUser.role?.name || "";
+
+  if (adminRoleName !== ROLES.SUPER_ADMIN) {
+    if (targetRoleName === ROLES.SUPER_ADMIN) {
       throw new ErrorResponse(
         "You are not authorized to modify a Super Admin",
         403
       );
     }
 
-    // Check B: Is the person being edited at the SAME level? (e.g., Sub-Admin editing Sub-Admin)
-    if (targetUser.role?.name === adminUser.role?.name) {
+    if (targetRoleName === adminRoleName) {
       throw new ErrorResponse(
         "You cannot modify users with the same role level as yours",
         403
       );
     }
 
-    // Check C: Is the Admin trying to promote someone TO Super Admin?
     if (updateData.roleId) {
-      // We need to fetch the name of the new role being assigned to verify it's not 'super_admin'
       const newRole = await Role.findById(updateData.roleId);
       if (!newRole) throw new Error("Target role not found");
-      if (newRole && newRole.name === ROLES.SUPER_ADMIN) {
+      if (newRole.name === ROLES.SUPER_ADMIN) {
         throw new ErrorResponse(
           "Only Super Admins can assign the Super Admin role",
           403
@@ -79,23 +122,39 @@ const updateUserRoleById = async (userId, updateData, adminUser) => {
     }
   }
 
-  // 3. --- PROCEED WITH UPDATES (Only if checks passed) ---
+  // 3. --- PROCEED WITH UPDATES ---
   if (updateData.roleId) targetUser.role = updateData.roleId;
-
-  // Make sure this matches your User Schema field name!
-  if (updateData.customPermissions) {
+  if (updateData.customPermissions)
     targetUser.customPermissions = updateData.customPermissions;
-  }
-
-  if (updateData.deniedPermissions) {
+  if (updateData.deniedPermissions)
     targetUser.deniedPermissions = updateData.deniedPermissions;
-  }
   if (updateData.name) targetUser.name = updateData.name;
 
+  // Handle deactivation (Soft Delete) if passed in updateData
+  if (updateData.isActive !== undefined) {
+    targetUser.isActive = updateData.isActive;
+    if (!updateData.isActive) targetUser.deletedAt = Date.now();
+    else targetUser.deletedAt = null;
+  }
+
   await targetUser.save();
+
+  // 4. RECORD THE AUDIT LOG
+  await auditService.log({
+    action: "UPDATE",
+    entityType: "User",
+    entityId: targetUser._id,
+    performedBy: adminUser._id,
+    req: req,
+    oldValue: oldValue,
+    newValue: targetUser.toObject(),
+  });
+
   return targetUser;
 };
+
 export default {
   getAllUsers,
   updateUserRoleById,
+  softDeleteUser,
 };

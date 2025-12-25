@@ -1,11 +1,11 @@
-import api from './api';
+import api from "./api";
 
 export default {
   getRoles() {
-    return api.get('/roles/list');
+    return api.get("/roles/list");
   },
   createRole(data) {
-    return api.post('/roles/create', data);
+    return api.post("/roles/create", data);
   },
   updateRole(id, data) {
     return api.put(`/roles/update/${id}`, data);
@@ -14,6 +14,6 @@ export default {
     return api.delete(`/roles/delete/${id}`);
   },
   getPermissions() {
-  return api.get('/roles/permissions');
-}
+    return api.get("/roles/permissions");
+  },
 };

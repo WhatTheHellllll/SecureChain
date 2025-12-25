@@ -1,40 +1,40 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import roleService from "../../services/roleService.js";
-import { showSuccess, showError, confirmDelete } from "../../utils/alert.js";
+import { showError } from "../../utils/alert.js";
 import PermissionSelector from "../../components/admin/PermissionSelector.vue";
 import { ROLES } from "@backend/constants/roles.js";
 import { PERMISSION_GROUPS } from "@backend/constants/permissions.js";
+import { useCrud } from "../../composables/useCrud.js";
+
+// NEW: Import Icons
+import { Plus, Trash2, Save, Shield, ShieldAlert } from "lucide-vue-next";
+
 // STATE
 const roles = ref([]);
 const selectedRole = ref(null);
-const loading = ref(false);
+const loading = ref(false); // Used for initial fetch only
 const isEditing = ref(false);
 const permissionGroups = ref({});
 
-// FETCH DATA
+// COMPOSABLE
+const { isPending, executeAction, confirmAndRemove } = useCrud();
+
 const fetchRoles = async () => {
   try {
     loading.value = true;
-
-    // 1. Fetch Roles
     const roleRes = await roleService.getRoles();
-    // REQUEST #1: Hide 'super_admin'
     roles.value = roleRes.data.data.filter(
       (role) => role.name !== ROLES.SUPER_ADMIN && role.name !== ROLES.SUB_ADMIN
     );
 
-    // 2. Fetch Permissions
     const permRes = await roleService.getPermissions();
     const rawData = permRes.data.data;
 
     if (rawData) {
       const cleanData = {};
       for (const groupName in rawData) {
-        // REQUEST #1: SKIP the entire 'admin' group
         if (groupName === "ADMIN" || groupName === "admin") continue;
-
-        // Flatten values AND Filter out the wildcard '*' permission
         const groupPermissions = Object.values(rawData[groupName]);
         cleanData[groupName] = groupPermissions.filter(
           (perm) =>
@@ -54,11 +54,8 @@ const fetchRoles = async () => {
 
 onMounted(fetchRoles);
 
-// --- SELECTION LOGIC ---
-
 const selectRole = (role) => {
   selectedRole.value = JSON.parse(JSON.stringify(role));
-  // SAFETY: Ensure permissions is a FLAT array
   if (Array.isArray(selectedRole.value.permissions)) {
     selectedRole.value.permissions = selectedRole.value.permissions.flat();
   }
@@ -70,45 +67,31 @@ const initNewRole = () => {
   isEditing.value = false;
 };
 
-// --- SAVE LOGIC ---
-
 const handleSave = async () => {
   if (!selectedRole.value.name) return showError("Role Name is required");
 
-  loading.value = true;
-  try {
-    const dataToSend = {
-      ...selectedRole.value,
-      permissions: selectedRole.value.permissions.flat(),
-    };
+  const dataToSend = { ...selectedRole.value };
+  const apiCall = isEditing.value
+    ? () => roleService.updateRole(dataToSend._id, dataToSend)
+    : () => roleService.createRole(dataToSend);
 
-    if (isEditing.value) {
-      await roleService.updateRole(dataToSend._id, dataToSend);
-      showSuccess("Role updated successfully");
-    } else {
-      await roleService.createRole(dataToSend);
-      showSuccess("Role created successfully");
-    }
+  const result = await executeAction(apiCall, "Role saved successfully");
 
+  if (result.success) {
     await fetchRoles();
     selectedRole.value = null;
-  } catch (err) {
-    showError(err.response?.data?.error || "Save failed");
-  } finally {
-    loading.value = false;
   }
 };
 
 const handleDelete = async () => {
-  try {
-    if (await confirmDelete()) {
-      await roleService.deleteRole(selectedRole.value._id);
-      showSuccess("Role deleted");
-      selectedRole.value = null;
-      fetchRoles();
-    }
-  } catch (err) {
-    showError(err.response?.data?.error);
+  const result = await confirmAndRemove(
+    () => roleService.deleteRole(selectedRole.value._id),
+    selectedRole.value.name
+  );
+
+  if (result.success) {
+    selectedRole.value = null;
+    await fetchRoles();
   }
 };
 </script>
@@ -120,37 +103,63 @@ const handleDelete = async () => {
     <div
       class="w-full md:w-1/4 bg-white rounded-lg shadow-md p-4 flex flex-col h-1/3 md:h-full"
     >
-      <div class="flex justify-between items-center mb-4 flex-none">
-        <h2 class="text-lg md:text-xl font-bold text-slate-800">Roles</h2>
+      <div class="flex justify-between items-center mb-6 flex-none">
+        <h2
+          class="text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2"
+        >
+          <ShieldAlert class="w-5 h-5 text-slate-600" />
+          <span>Roles</span>
+        </h2>
+
         <button
           @click="initNewRole"
-          class="text-xs md:text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200"
+          class="flex items-center gap-1 text-xs md:text-sm bg-blue-100 text-blue-700 px-3 py-1.5 rounded hover:bg-blue-200 transition font-medium"
         >
-          + New
+          <Plus class="w-3 h-3 md:w-4 md:h-4" />
+          <span>New</span>
         </button>
       </div>
 
       <div class="space-y-2 overflow-y-auto flex-grow custom-scrollbar pr-1">
+        <div v-if="loading" class="text-center py-4 text-gray-400 text-sm">
+          Loading...
+        </div>
+
         <div
+          v-else
           v-for="role in roles"
           :key="role._id"
           @click="selectRole(role)"
-          class="p-3 rounded-lg cursor-pointer transition border border-transparent hover:border-gray-300 hover:bg-gray-50"
+          class="group p-3 rounded-lg cursor-pointer transition border border-transparent hover:border-gray-300 hover:bg-gray-50"
           :class="{
             'bg-blue-50 border-blue-200 ring-1 ring-blue-300':
               selectedRole?._id === role._id,
           }"
         >
-          <div class="font-bold text-gray-800 text-sm md:text-base">
-            {{ role.name }}
-          </div>
-          <div class="text-xs text-gray-500 truncate">
-            {{ role.description || "No description" }}
+          <div class="flex items-start gap-3">
+            <Shield
+              class="w-5 h-5 flex-none mt-0.5 transition-colors"
+              :class="
+                selectedRole?._id === role._id
+                  ? 'text-blue-600'
+                  : 'text-gray-400 group-hover:text-gray-600'
+              "
+            />
+
+            <div class="flex flex-col overflow-hidden">
+              <div
+                class="font-bold text-gray-800 text-sm md:text-base truncate leading-snug"
+              >
+                {{ role.name }}
+              </div>
+              <div class="text-xs text-gray-500 truncate mt-0.5">
+                {{ role.description || "No description" }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-
     <div
       class="w-full md:w-3/4 bg-white rounded-lg shadow-md p-4 md:p-6 flex flex-col h-2/3 md:h-full"
       v-if="selectedRole"
@@ -163,7 +172,7 @@ const handleDelete = async () => {
           <input
             v-model="selectedRole.name"
             type="text"
-            class="w-full mt-1 p-2 border rounded font-bold text-lg"
+            class="w-full mt-1 p-2 border rounded font-bold text-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300 outline-none transition"
             placeholder="e.g. Manager"
           />
         </div>
@@ -174,7 +183,7 @@ const handleDelete = async () => {
           <input
             v-model="selectedRole.description"
             type="text"
-            class="w-full mt-1 p-2 border rounded"
+            class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-100 focus:border-blue-300 outline-none transition"
             placeholder="What can this role do?"
           />
         </div>
@@ -190,29 +199,43 @@ const handleDelete = async () => {
       <div
         class="border-t pt-4 mt-4 flex justify-between items-center flex-none"
       >
-        <button
+        <BaseButton
           v-if="isEditing"
+          variant="ghost"
           @click="handleDelete"
-          class="text-red-500 text-sm hover:text-red-700 font-medium"
+          :loading="isPending"
+          class="text-red-600 hover:text-red-800 hover:bg-red-50"
         >
-          Delete
-        </button>
+          <template #icon>
+            <Trash2 class="w-4 h-4" />
+          </template>
+          Delete Role
+        </BaseButton>
+
         <div v-else></div>
-        <button
+
+        <BaseButton
+          variant="primary"
           @click="handleSave"
-          :disabled="loading"
-          class="bg-slate-800 text-white px-6 py-2 rounded-lg text-sm hover:bg-slate-900 disabled:bg-gray-400"
+          :loading="isPending"
+          class="shadow-sm"
         >
-          {{ loading ? "Saving..." : "Save" }}
-        </button>
+          <template #icon v-if="!isPending">
+            <Save class="w-4 h-4" />
+          </template>
+          {{ isPending ? "Saving..." : "Save Changes" }}
+        </BaseButton>
       </div>
     </div>
 
     <div
       v-else
-      class="w-full md:w-3/4 flex items-center justify-center text-gray-400 bg-white rounded-lg shadow-md h-2/3 md:h-full"
+      class="w-full md:w-3/4 flex flex-col items-center justify-center text-gray-400 bg-white rounded-lg shadow-md h-2/3 md:h-full gap-4"
     >
-      Select a role to edit
+      <div class="p-4 bg-gray-50 rounded-full">
+        <Shield class="w-12 h-12 text-gray-300" />
+      </div>
+      <p>Select a role from the left to edit permissions</p>
     </div>
   </div>
 </template>

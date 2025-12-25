@@ -26,49 +26,83 @@ const getProductById = async (id) => {
 };
 
 /**
- * Create a new product
- * @param {Object} productData
- * @param {String} userId - ID of the user creating the product
+ * Creates a new product and logs the action
+ * @param {Object} productData - The product details (name, sku, price, etc.)
+ * @param {string} userId - The MongoDB ObjectId of the user creating the product
+ * @param {Object} req - The Express Request object (needed for IP/UserAgent in Audit Log)
+ * @returns {Promise<Object>} The created product document
  */
-const createProduct = async (productData, userId) => {
-  // Add the user to the data payload
+const createProduct = async (productData, userId, req) => {
   const payload = {
     ...productData,
     lastUpdatedBy: userId,
+    isActive: true,
   };
 
   const product = await Product.create(payload);
+
+  // RECORD THE AUDIT LOG
+  // We do this after creation so we have the real product._id
+  await auditService.log({
+    action: "CREATE",
+    entityType: "Product",
+    entityId: product._id,
+    performedBy: userId,
+    req: req,
+    oldValue: null,
+    newValue: product.toObject(),
+  });
+
   return product;
 };
 
 /**
- * Update a product
- * @param {String} id
- * @param {Object} updateData
- * @param {String} userId - ID of the user updating the product
+ * Updates a product by ID and records changes in Audit Log
+ * @param {string} id - The product ID to update
+ * @param {Object} updateData - Object containing fields to update
+ * @param {string} userId - The ID of the user performing the update
+ * @param {Object} req - The Express Request object
+ * @returns {Promise<Object>} The updated product document
+ * @throws {ErrorResponse} 404 if product not found
  */
-const updateProductById = async (id, updateData, userId) => {
+const updateProductById = async (id, updateData, userId, req) => {
   // Add the user to the update payload
-  const payload = {
-    ...updateData,
-    lastUpdatedBy: userId,
-  };
-
-  const product = await Product.findByIdAndUpdate(id, payload, {
-    new: true,
-    runValidators: true,
-  }).populate("lastUpdatedBy", "name");
-
+  const product = await Product.findById(id);
   if (!product) {
     throw new ErrorResponse(`Product not found with id of ${id}`, 404);
   }
+  // Capture what it looked like BEFORE the update
+  const oldValue = product.toObject();
+
+  // Apply the new data
+  Object.keys(updateData).forEach((key) => {
+    product[key] = updateData[key];
+  });
+  product.lastUpdatedBy = userId;
+
+  // Save to database
+  await product.save();
+
+  // LOG THE ACTION
+  await auditService.log({
+    action: "UPDATE",
+    entityType: "Product",
+    entityId: product._id,
+    performedBy: userId,
+    req: req,
+    oldValue: oldValue,
+    newValue: product.toObject(),
+  });
 
   return product;
 };
 
 /**
- * Delete a product
- * @param {String} id
+ * Soft deletes a product (sets isActive: false)
+ * @param {string} id - The product ID to archive
+ * @param {string} userId - The ID of the user performing the delete
+ * @param {Object} req - The Express Request object
+ * @returns {Promise<Object>} The archived product document
  */
 const softDeleteProduct = async (id, userId, req) => {
   const product = await Product.findById(id);
@@ -79,8 +113,8 @@ const softDeleteProduct = async (id, userId, req) => {
 
   // Capture old state for audit
   const oldValue = {
-    isActive: product.isActive,
-    deletedAt: product.deletedAt,
+    isActive: product.isActive ?? true,
+    deletedAt: product.deletedAt || null,
   };
 
   product.isActive = false;
