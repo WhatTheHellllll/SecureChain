@@ -75,7 +75,11 @@ const createRole = async (req, res, next) => {
  */
 const updateRole = async (req, res, next) => {
   try {
-    const role = await roleService.updateRoleById(req.params.id, req.body);
+    const role = await roleService.updateRoleById(
+      req.params.id,
+      req.body,
+      req.user
+    );
 
     res.status(200).json({
       success: true,

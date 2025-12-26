@@ -5,7 +5,7 @@ import productRoutes from "./routes/product.routes.js";
 import errorHandler from "./middleware/error.middleware.js";
 import roleRoutes from "./routes/role.routes.js";
 import userRoutes from "./routes/user.routes.js";
-import adminRoutes from "./routes/admin.route.js";
+import adminRoutes from "./routes/admin.routes.js";
 const app = express();
 // Middleware
 app.use(cors());

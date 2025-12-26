@@ -2,6 +2,8 @@ import { User } from "../models/user.model.js";
 import ErrorResponse from "../utils/error.response.js";
 import { ROLES } from "../constants/roles.js";
 import { Role } from "../models/role.model.js";
+import auditService from "./audit.service.js";
+
 /**
  * Get all users with their role details
  */

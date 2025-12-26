@@ -2,7 +2,7 @@
 import { ref, onMounted } from "vue";
 import adminService from "../../services/adminService";
 import { showError } from "../../utils/alert";
-
+import { RefreshCw } from "lucide-vue-next";
 const logs = ref([]);
 const loading = ref(false);
 
@@ -41,9 +41,11 @@ onMounted(fetchLogs);
       <h1 class="text-2xl font-bold text-gray-800">System Activity Logs</h1>
       <button
         @click="fetchLogs"
-        class="px-4 py-2 bg-white border rounded shadow-sm hover:bg-gray-50 text-sm"
+        :disabled="isPending"
+        class="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition disabled:opacity-50"
       >
-        Refresh
+        <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': isPending }" />
+        <span class="text-sm font-medium">Refresh</span>
       </button>
     </div>
 

@@ -1,31 +1,50 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, pushScopeId } from "vue";
 import roleService from "../../services/roleService.js";
 import { showError } from "../../utils/alert.js";
 import PermissionSelector from "../../components/admin/PermissionSelector.vue";
 import { ROLES } from "@backend/constants/roles.js";
 import { PERMISSION_GROUPS } from "@backend/constants/permissions.js";
 import { useCrud } from "../../composables/useCrud.js";
-import { Plus, Trash2, Save, Shield, ShieldAlert } from "lucide-vue-next";
+import {
+  Plus,
+  Trash2,
+  Save,
+  Shield,
+  ShieldAlert,
+  Edit2,
+} from "lucide-vue-next";
 import BaseButton from "../../components/base/BaseButton.vue";
-
+import BaseInput from "../../components/base/BaseInput.vue";
+import BaseModal from "../../components/base/BaseModal.vue";
+import { useRouter } from "vue-router";
+// COMPOSABLE
+const { isPending, executeAction, confirmAndRemove } = useCrud();
 // STATE
 const roles = ref([]);
-const selectedRole = ref(null);
+const selectedRole = ref({ name: "", description: "", permissions: [] });
 const loading = ref(false); // Used for initial fetch only
 const isEditing = ref(false);
 const permissionGroups = ref({});
-
-// COMPOSABLE
-const { isPending, executeAction, confirmAndRemove } = useCrud();
+const showModal = ref(false);
+const router = useRouter();
 
 const fetchRoles = async () => {
   try {
     loading.value = true;
     const roleRes = await roleService.getRoles();
-    roles.value = roleRes.data.data.filter(
-      (role) => role.name !== ROLES.SUPER_ADMIN && role.name !== ROLES.SUB_ADMIN
-    );
+
+    roles.value = roleRes.data.data
+      .filter(
+        (role) =>
+          role.name !== ROLES.SUPER_ADMIN && role.name !== ROLES.SUB_ADMIN
+      )
+      .map((role) => ({
+        ...role,
+        permissions: Array.isArray(role.permissions)
+          ? role.permissions.flat()
+          : [],
+      }));
 
     const permRes = await roleService.getPermissions();
     const rawData = permRes.data.data;
@@ -53,19 +72,6 @@ const fetchRoles = async () => {
 
 onMounted(fetchRoles);
 
-const selectRole = (role) => {
-  selectedRole.value = JSON.parse(JSON.stringify(role));
-  if (Array.isArray(selectedRole.value.permissions)) {
-    selectedRole.value.permissions = selectedRole.value.permissions.flat();
-  }
-  isEditing.value = true;
-};
-
-const initNewRole = () => {
-  selectedRole.value = { name: "", description: "", permissions: [] };
-  isEditing.value = false;
-};
-
 const handleSave = async () => {
   if (!selectedRole.value.name) return showError("Role Name is required");
 
@@ -78,7 +84,7 @@ const handleSave = async () => {
 
   if (result.success) {
     await fetchRoles();
-    selectedRole.value = null;
+    router.push({ name: "admin-roles" });
   }
 };
 
@@ -93,143 +99,185 @@ const handleDelete = async () => {
     await fetchRoles();
   }
 };
+
+const openEditModal = (role) => {
+  // Deep copy to avoid modifying the list while editing
+  selectedRole.value = JSON.parse(JSON.stringify(role));
+
+  // Ensure permissions is a flat array
+  if (Array.isArray(selectedRole.value.permissions)) {
+    selectedRole.value.permissions = selectedRole.value.permissions.flat();
+  }
+
+  isEditing.value = true;
+  showModal.value = true;
+};
+
+const openCreateModal = () => {
+  selectedRole.value = { name: "", description: "", permissions: [] };
+  isEditing.value = false;
+  showModal.value = true;
+};
+
 </script>
-
 <template>
-  <div
-    class="flex flex-col md:flex-row h-[calc(100vh-4rem)] bg-gray-100 p-4 md:p-6 gap-4 md:gap-6 overflow-hidden"
-  >
-    <div
-      class="w-full md:w-1/4 bg-white rounded-lg shadow-md p-4 flex flex-col h-1/3 md:h-full"
-    >
-      <div class="flex justify-between items-center mb-6 flex-none">
-        <h2
-          class="text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2"
-        >
-          <ShieldAlert class="w-5 h-5 text-slate-600" />
-          <span>Roles</span>
-        </h2>
-
-        <button
-          @click="initNewRole"
-          class="flex items-center gap-1 text-xs md:text-sm bg-blue-100 text-blue-700 px-3 py-1.5 rounded hover:bg-blue-200 transition font-medium"
-        >
-          <Plus class="w-3 h-3 md:w-4 md:h-4" />
-          <span>New</span>
-        </button>
+  <div class="p-6 min-h-screen bg-gray-50">
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          <ShieldAlert class="text-indigo-600" />
+          Role Management
+        </h1>
+        <p class="text-gray-500 text-sm mt-1">
+          Define access levels and permissions for your team.
+        </p>
       </div>
 
-      <div class="space-y-2 overflow-y-auto flex-grow custom-scrollbar pr-1">
-        <div v-if="loading" class="text-center py-4 text-gray-400 text-sm">
-          Loading...
+      <BaseButton variant="primary" @click="openCreateModal">
+        <template #icon><Plus class="w-4 h-4" /></template>
+        Create Role
+      </BaseButton>
+    </div>
+
+    <div v-if="loading" class="flex justify-center py-12">
+      <span class="text-indigo-600 animate-pulse font-medium"
+        >Loading roles...</span
+      >
+    </div>
+
+    <div
+      v-else-if="roles.length === 0"
+      class="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-100"
+    >
+      <Shield class="w-12 h-12 text-gray-300 mx-auto mb-3" />
+      <h3 class="text-lg font-medium text-gray-900">No Roles Found</h3>
+      <p class="text-gray-500 mb-4">Get started by creating a new role.</p>
+      <BaseButton variant="primary" @click="openCreateModal"
+        >Create Role</BaseButton
+      >
+    </div>
+
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div
+        v-for="role in roles"
+        :key="role._id"
+        class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow group relative"
+      >
+        <div class="flex items-start justify-between mb-4">
+          <div
+            class="p-3 bg-indigo-50 rounded-lg group-hover:bg-indigo-100 transition-colors"
+          >
+            <Shield class="w-6 h-6 text-indigo-600" />
+          </div>
+          <button
+            @click="openEditModal(role)"
+            class="text-gray-400 hover:text-indigo-600 transition-colors p-1"
+            title="Edit Role"
+          >
+            <Edit2 class="w-4 h-4" />
+          </button>
         </div>
 
-        <div
-          v-else
-          v-for="role in roles"
-          :key="role._id"
-          @click="selectRole(role)"
-          class="group p-3 rounded-lg cursor-pointer transition border border-transparent hover:border-gray-300 hover:bg-gray-50"
-          :class="{
-            'bg-blue-50 border-blue-200 ring-1 ring-blue-300':
-              selectedRole?._id === role._id,
-          }"
-        >
-          <div class="flex items-start gap-3">
-            <Shield
-              class="w-5 h-5 flex-none mt-0.5 transition-colors"
-              :class="
-                selectedRole?._id === role._id
-                  ? 'text-blue-600'
-                  : 'text-gray-400 group-hover:text-gray-600'
-              "
-            />
+        <h3 class="text-lg font-bold text-gray-900 mb-1">{{ role.name }}</h3>
+        <p class="text-sm text-gray-500 mb-4 h-10 line-clamp-2">
+          {{ role.description || "No description provided." }}
+        </p>
 
-            <div class="flex flex-col overflow-hidden">
-              <div
-                class="font-bold text-gray-800 text-sm md:text-base truncate leading-snug"
-              >
-                {{ role.name }}
-              </div>
-              <div class="text-xs text-gray-500 truncate mt-0.5">
-                {{ role.description || "No description" }}
-              </div>
-            </div>
-          </div>
+        <div
+          class="flex items-center justify-between pt-4 border-t border-gray-50"
+        >
+          <span
+            class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded"
+          >
+            {{ role.permissions?.length || 0 }} Permissions
+          </span>
+          <span
+            class="text-xs text-indigo-600 font-medium cursor-pointer hover:underline"
+            @click="openEditModal(role)"
+          >
+            View Details
+          </span>
         </div>
       </div>
     </div>
-    <div
-      class="w-full md:w-3/4 bg-white rounded-lg shadow-md p-4 md:p-6 flex flex-col h-2/3 md:h-full"
-      v-if="selectedRole"
+
+    <BaseModal
+      :show="showModal"
+      :title="isEditing ? 'Edit Role' : 'Create New Role'"
+      max-width="4xl"
+      @close="showModal = false"
     >
-      <div class="flex flex-col md:flex-row gap-4 mb-4 border-b pb-4 flex-none">
-        <div class="flex-1">
-          <label class="block text-xs font-bold text-gray-500 uppercase"
-            >Role Name</label
-          >
-          <input
+      <form v-if="selectedRole" @submit.prevent="handleSave" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <BaseInput
             v-model="selectedRole.name"
-            type="text"
-            class="w-full mt-1 p-2 border rounded font-bold text-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300 outline-none transition"
-            placeholder="e.g. Manager"
+            label="Role Name"
+            placeholder="e.g. Inventory Manager"
+            required
           />
-        </div>
-        <div class="flex-1">
-          <label class="block text-xs font-bold text-gray-500 uppercase"
-            >Description</label
-          >
-          <input
+          <BaseInput
             v-model="selectedRole.description"
-            type="text"
-            class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-100 focus:border-blue-300 outline-none transition"
+            label="Description"
             placeholder="What can this role do?"
           />
         </div>
-      </div>
 
-      <div class="flex-grow overflow-y-auto pr-2 custom-scrollbar">
-        <PermissionSelector
-          v-model="selectedRole.permissions"
-          :permission-groups="permissionGroups"
-        />
-      </div>
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 mb-3 flex justify-between items-center"
+          >
+            <span>Permissions</span>
+            <span
+              class="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded"
+            >
+              {{ selectedRole.permissions?.length || 0 }} selected
+            </span>
+          </label>
 
-      <div
-        class="border-t pt-4 mt-4 flex justify-between items-center flex-none"
-      >
-        <BaseButton
-          v-if="isEditing"
-          variant="danger"
-          @click="handleDelete"
-          :loading="isPending"
-        >
-          <template #icon><Trash2 class="w-4 h-4" /></template>
-          Delete Role
-        </BaseButton>
+          <div
+            class="h-[400px] overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50/50 custom-scrollbar"
+          >
+            <PermissionSelector
+              v-model="selectedRole.permissions"
+              :permission-groups="permissionGroups"
+            />
+          </div>
+        </div>
+      </form>
 
-        <div v-else></div>
+      <template #footer>
+        <div class="flex-1">
+          <BaseButton
+            v-if="isEditing"
+            variant="danger"
+            @click="handleDelete"
+            :loading="isPending"
+          >
+            <template #icon><Trash2 class="w-4 h-4" /></template>
+            Delete Role
+          </BaseButton>
+        </div>
 
-        <BaseButton variant="primary" @click="handleSave" :loading="isPending">
-          <template #icon><Save class="w-4 h-4" /></template>
-          {{ isPending ? "Saving..." : "Save Changes" }}
-        </BaseButton>
-      </div>
-    </div>
-
-    <div
-      v-else
-      class="w-full md:w-3/4 flex flex-col items-center justify-center text-gray-400 bg-white rounded-lg shadow-md h-2/3 md:h-full gap-4"
-    >
-      <div class="p-4 bg-gray-50 rounded-full">
-        <Shield class="w-12 h-12 text-gray-300" />
-      </div>
-      <p>Select a role from the left to edit permissions</p>
-    </div>
+        <div class="flex gap-3">
+          <BaseButton variant="secondary" @click="showModal = false">
+            Cancel
+          </BaseButton>
+          <BaseButton
+            variant="primary"
+            @click="handleSave"
+            :loading="isPending"
+          >
+            <template #icon><Save class="w-4 h-4" /></template>
+            {{ isEditing ? "Save Changes" : "Create Role" }}
+          </BaseButton>
+        </div>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
 <style scoped>
+/* Only need scrollbar styling now, modal handles layout */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }

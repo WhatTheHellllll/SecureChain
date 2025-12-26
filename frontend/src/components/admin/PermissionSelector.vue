@@ -52,6 +52,19 @@ const toggleGroup = (groupKey) => {
   }
   emit("update:modelValue", newPerms);
 };
+
+const formatLabel = (perm) => {
+  if (!perm) return "";
+
+  // Split by dot (e.g., "product.create" -> ["product", "create"])
+  const parts = perm.split(".");
+
+  // Take the last part (e.g., "create")
+  let label = parts[parts.length - 1];
+
+  // Replace underscores with spaces & Capitalize Words
+  return label.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+};
 </script>
 
 <template>
@@ -68,6 +81,7 @@ const toggleGroup = (groupKey) => {
           {{ groupName }}
         </h3>
         <button
+          type="button"
           @click="toggleGroup(groupName)"
           class="text-xs font-bold px-2 py-1 rounded transition"
           :class="
@@ -103,7 +117,7 @@ const toggleGroup = (groupKey) => {
             >
           </div>
           <span class="text-xs md:text-sm text-gray-700 select-none break-all">
-            {{ perm }}
+            {{ formatLabel(perm) }}
           </span>
         </div>
       </div>

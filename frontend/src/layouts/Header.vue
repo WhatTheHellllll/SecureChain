@@ -64,12 +64,10 @@ const handleLogout = () => {
         <BaseButton
           variant="ghost"
           @click="handleLogout"
-          class="text-indigo-100 hover:text-white hover:bg-indigo-900 border border-indigo-900/50"
+          class="flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg text-red-300 hover:bg-red-900/20 hover:text-red-200 transition-colors"
         >
-          <template #icon>
-            <LogOut class="w-4 h-4" />
-          </template>
-          Logout
+          <LogOut class="w-5 h-5" />
+          <span class="font-medium">Logout</span>
         </BaseButton>
       </div>
     </div>

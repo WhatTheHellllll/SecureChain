@@ -39,35 +39,6 @@ onMounted(async () => {
   }
 });
 
-// Simple Frontend Validation
-const validate = () => {
-  errors.value = {};
-  let isValid = true;
-
-  if (!form.value.name) {
-    errors.value.name = "Product name is required.";
-    isValid = false;
-  }
-  if (!form.value.sku) {
-    errors.value.sku = "SKU is required.";
-    isValid = false;
-  }
-  if (!form.value.category) {
-    errors.value.category = "Category is required.";
-    isValid = false;
-  }
-  if (!form.value.price || form.value.price <= 0) {
-    errors.value.price = "Price must be greater than 0.";
-    isValid = false;
-  }
-  if (form.value.quantity === "" || form.value.quantity < 0) {
-    errors.value.quantity = "Quantity cannot be negative.";
-    isValid = false;
-  }
-
-  return isValid;
-};
-
 // Handle Update
 const handleUpdate = async (formData) => {
   saving.value = true;
@@ -90,8 +61,8 @@ const handleUpdate = async (formData) => {
       <h2 class="text-2xl font-bold text-gray-800">Edit Product</h2>
     </div>
 
-    <div v-if="loading" class="text-center py-10 text-indigo-600">
-      Loading...
+    <div v-if="loading" class="text-center py-10 text-indigo-600 font-medium">
+      Loading product details...
     </div>
 
     <ProductForm

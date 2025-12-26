@@ -2,38 +2,39 @@
 import { ref } from "vue";
 import { useRouter, RouterLink } from "vue-router";
 import { useAuthStore } from "@/store/authStore.js";
-import { showError } from "../../utils/alert.js";
+import { showError } from "@/utils/alert.js"; // Standardized import alias if available, else use relative
+
+// COMPONENTS
+import BaseInput from "@/components/base/BaseInput.vue";
+import BaseButton from "@/components/base/BaseButton.vue";
+import { Package, LogIn } from "lucide-vue-next";
 
 const router = useRouter();
-const authStore = useAuthStore(); // 2. Initialize Store
+const authStore = useAuthStore();
 
 // Form State
 const email = ref("");
 const password = ref("");
 
-// Handle Login Logic
 const handleLogin = async () => {
-  // Validation
   if (!email.value || !password.value) {
     showError("Please fill in both email and password.");
     return;
   }
 
   try {
-    // 3. Use Store Action
-    // The store handles loading state, API calls, and storage saving
     await authStore.login({
       email: email.value,
       password: password.value,
     });
-    // Navigation
+
+    // Redirect logic
     if (authStore.isSuperAdmin || authStore.isAdmin) {
       router.push("/admin/products/list");
     } else {
       router.push("/products/list");
     }
   } catch (err) {
-    // The store throws the error back so we can show the alert
     console.log(err);
     const msg = err.response?.data?.error || "Login failed. Please try again.";
     showError(msg);
@@ -43,56 +44,57 @@ const handleLogin = async () => {
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-slate-800">⛓️ SecureChain</h1>
-        <p class="text-gray-500 mt-2">Sign in to manage your inventory</p>
+    <div
+      class="bg-white p-10 rounded-xl shadow-lg w-full max-w-md border border-gray-100"
+    >
+      <div class="text-center mb-10">
+        <div class="flex justify-center mb-4">
+          <div class="p-3 bg-indigo-600 rounded-lg shadow-lg shadow-indigo-200">
+            <Package class="w-8 h-8 text-white" />
+          </div>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900">Welcome Back</h1>
+        <p class="text-gray-500 mt-2 text-sm">
+          Sign in to access your SecureChain dashboard
+        </p>
       </div>
 
       <form @submit.prevent="handleLogin" class="space-y-6">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Email Address</label
-          >
-          <input
-            v-model="email"
-            type="email"
-            placeholder="admin@securechain.com"
-            required
-            class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
+        <BaseInput
+          v-model="email"
+          label="Email Address"
+          type="email"
+          placeholder="admin@securechain.com"
+          required
+        />
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Password</label
-          >
-          <input
-            v-model="password"
-            type="password"
-            placeholder="••••••••"
-            required
-            class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
+        <BaseInput
+          v-model="password"
+          label="Password"
+          type="password"
+          placeholder="••••••••"
+          required
+        />
 
-        <button
+        <BaseButton
           type="submit"
-          :disabled="authStore.loading"
-          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+          variant="primary"
+          :loading="authStore.loading"
+          class="w-full justify-center py-2.5 text-base"
         >
-          {{ authStore.loading ? "Signing in..." : "Sign In" }}
-        </button>
+          <template #icon><LogIn class="w-4 h-4" /></template>
+          Sign In
+        </BaseButton>
       </form>
 
-      <div class="mt-6 text-center text-sm text-gray-600">
+      <div class="mt-8 text-center text-sm text-gray-600">
         <p>
           Don't have an account?
           <RouterLink
             to="/register"
-            class="font-medium text-blue-600 hover:text-blue-500 hover:underline"
+            class="font-semibold text-indigo-600 hover:text-indigo-500 hover:underline transition-colors"
           >
-            Register here
+            Create an account
           </RouterLink>
         </p>
       </div>

@@ -46,7 +46,7 @@ const createRole = async (roleData) => {
  * @param {Object} req - Express Request object
  * @returns {Promise<Object>} Updated role
  */
-const updateRoleById = async (id, updateData) => {
+const updateRoleById = async (id, updateData, user) => {
   const role = await Role.findById(id);
 
   if (!role) {
@@ -68,7 +68,6 @@ const updateRoleById = async (id, updateData) => {
     entityType: "Role",
     entityId: role._id,
     performedBy: user._id,
-    req: req,
     oldValue: oldValue,
     newValue: role.toObject(),
   });

@@ -7,7 +7,9 @@ import { Pencil, Trash2, PlusCircle, Search } from "lucide-vue-next";
 import { usePermission } from "../../composables/usePermission.js";
 import { PERMISSION_GROUPS } from "@backend/constants/permissions.js";
 import BaseButton from "../../components/base/BaseButton.vue";
+import BaseModal from "@/components/base/BaseModal.vue";
 
+const isModalOpen = ref(false);
 const router = useRouter();
 const route = useRoute();
 const products = ref([]);
