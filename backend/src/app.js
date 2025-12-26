@@ -16,6 +16,13 @@ app.use("/api/v1/roles", roleRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/products", productRoutes);
 app.use("/api/v1/audit", adminRoutes);
+
+app.use((req, res, next) => {
+  const error = new Error("Not Found");
+  error.statusCode = 404;
+  next(error);
+});
+
 app.use(errorHandler);
 
 export default app;

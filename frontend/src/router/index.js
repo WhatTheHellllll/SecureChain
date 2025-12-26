@@ -28,8 +28,13 @@ const router = createRouter({
 // THE SECURITY GUARD
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
-  // General Auth Protection
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+  const isAuthenticated = !!authStore.token;
+
+  if ((to.name === "login" || to.name === "register") && isAuthenticated) {
+    return next("/products/list");
+  }
+
+  if (to.meta.requiresAuth && !isAuthenticated) {
     return next("/login");
   }
 
@@ -43,20 +48,7 @@ router.beforeEach((to, from, next) => {
       return next("/products/list");
     }
   }
-
-  const publicPages = ["/login", "/register"];
-  const authRequired = !publicPages.includes(to.path);
-  // if page is private AND user has no token -> Kick them to login
-  if (authRequired && !authStore.token) {
-    return next("/login");
-  } else if (
-    (to.name === "login" || to.name === "register") &&
-    authStore.token
-  ) {
-    next("/products/list");
-  } else {
-    next();
-  }
+  next();
 });
 
 export default router;
